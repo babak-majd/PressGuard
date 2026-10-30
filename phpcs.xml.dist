@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<ruleset name="PressGuard">
+	<description>Coding standards for PressGuard.</description>
+
+	<file>.</file>
+
+	<exclude-pattern>/vendor/</exclude-pattern>
+	<exclude-pattern>/node_modules/</exclude-pattern>
+	<exclude-pattern>/assets/</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<rule ref="WordPress">
+		<!-- The firewall prepend runs before WordPress loads, so some WP-only
+		     rules (nonce, i18n of early strings) don't apply there. -->
+		<exclude-pattern>/firewall/prepend.php</exclude-pattern>
+	</rule>
+
+	<config name="minimum_supported_wp_version" value="5.6"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="pressguard"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="pressguard"/>
+				<element value="PressGuard"/>
+				<element value="pg_waf"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

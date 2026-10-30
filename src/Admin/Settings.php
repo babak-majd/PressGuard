@@ -48,6 +48,9 @@ final class Settings {
 				'label'  => __( 'General', 'pressguard' ),
 				'fields' => array(
 					array( 'key' => 'firewall.mode', 'type' => 'select', 'label' => __( 'Firewall mode', 'pressguard' ), 'options' => array( 'learning' => __( 'Learning (log only)', 'pressguard' ), 'detect' => __( 'Detection only', 'pressguard' ), 'enabled' => __( 'Enabled (block)', 'pressguard' ) ), 'default' => 'learning' ),
+					array( 'key' => 'anomaly.risk_scoring', 'type' => 'checkbox', 'label' => __( 'Behavioural risk scoring', 'pressguard' ), 'default' => true ),
+					array( 'key' => 'anomaly.risk_block', 'type' => 'number', 'label' => __( 'Risk score to block an IP', 'pressguard' ), 'default' => 40 ),
+					array( 'key' => 'delete_data_on_uninstall', 'type' => 'checkbox', 'label' => __( 'Delete all PressGuard data when the plugin is uninstalled', 'pressguard' ), 'default' => false ),
 				),
 			),
 			'firewall'  => array(

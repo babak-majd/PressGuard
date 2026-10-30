@@ -1,0 +1,22 @@
+includes:
+	- vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+	level: 5
+	paths:
+		- pressguard.php
+		- uninstall.php
+		- src
+		- firewall
+	bootstrapFiles:
+		- src/autoload.php
+	excludePaths:
+		- vendor/*
+		- node_modules/*
+	# PressGuard constants defined in the bootstrap file.
+	dynamicConstantNames:
+		- PRESSGUARD_VERSION
+		- PRESSGUARD_DIR
+		- PRESSGUARD_URL
+		- PRESSGUARD_FILE
+		- PRESSGUARD_BASENAME
