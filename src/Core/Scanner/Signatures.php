@@ -88,6 +88,60 @@ final class Signatures {
 	}
 
 	/**
+	 * Signatures specific to .htaccess files.
+	 *
+	 * @return array[]
+	 */
+	public static function htaccess_rules() {
+		return array(
+			array(
+				'id'          => 'htaccess-auto-prepend',
+				'pattern'     => '/php_value\s+auto_(prepend|append)_file/i',
+				'score'       => 7,
+				'description' => 'auto_prepend/append_file directive (can load a backdoor on every request)',
+			),
+			array(
+				'id'          => 'htaccess-handler-php',
+				'pattern'     => '/(AddType|AddHandler|SetHandler)\s+[^\n]*php/i',
+				'score'       => 6,
+				'description' => 'Directive mapping files to the PHP handler (risky in uploads)',
+			),
+			array(
+				'id'          => 'htaccess-php-flag',
+				'pattern'     => '/php_(value|flag)\s+(allow_url_include|auto_prepend_file|safe_mode|open_basedir)/i',
+				'score'       => 6,
+				'description' => 'Dangerous php_value/php_flag override',
+			),
+			array(
+				'id'          => 'htaccess-base64',
+				'pattern'     => '/(RewriteRule|RewriteCond)[^\n]*(base64|eval|%00)/i',
+				'score'       => 7,
+				'description' => 'Suspicious rewrite directive',
+			),
+		);
+	}
+
+	/**
+	 * Scan .htaccess content for malicious directives.
+	 *
+	 * @param string $content File content.
+	 * @return array[]
+	 */
+	public static function scan_htaccess( $content ) {
+		$matches = array();
+		foreach ( self::htaccess_rules() as $sig ) {
+			if ( @preg_match( $sig['pattern'], $content ) === 1 ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				$matches[] = array(
+					'id'          => $sig['id'],
+					'score'       => $sig['score'],
+					'description' => $sig['description'],
+				);
+			}
+		}
+		return $matches;
+	}
+
+	/**
 	 * Scan file content and return the matched signatures.
 	 *
 	 * @param string $content File content.

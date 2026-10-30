@@ -114,10 +114,12 @@ final class Permissions implements Module {
 				$reason = __( 'More permissive than recommended.', 'pressguard' );
 			}
 
-			// wp-config.php should not be group/world readable.
-			if ( 'wp-config.php' === basename( $path ) && ( $current & 0077 ) ) {
+			// wp-config.php: owner rw + optional group-read (0640) is fine; flag
+			// any "other" access, or group write/exec. This matches the 0640
+			// recommendation so a fix actually clears the warning.
+			if ( 'wp-config.php' === basename( $path ) && ( $current & 0037 ) ) {
 				$risky  = true;
-				$reason = __( 'Readable by group/other.', 'pressguard' );
+				$reason = __( 'Accessible to other users (should be 600–640).', 'pressguard' );
 			}
 
 			$rows[] = array(

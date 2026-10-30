@@ -47,6 +47,10 @@ final class Hardening implements Module {
 	 * {@inheritDoc}
 	 */
 	public function register() {
+		// Keep .htaccess rules in sync whenever settings change (attach this
+		// regardless of the enabled flag so the rules can also be removed).
+		add_action( 'update_option_' . \PressGuard\Support\Config::OPTION, array( $this, 'sync_htaccess' ), 10, 2 );
+
 		if ( ! $this->plugin->config()->is_enabled( 'hardening' ) ) {
 			return;
 		}
@@ -98,6 +102,28 @@ final class Hardening implements Module {
 	 */
 	private function on( $key ) {
 		return (bool) $this->plugin->config()->get( 'hardening.' . $key, false );
+	}
+
+	/**
+	 * Apply/remove .htaccess hardening rules when settings change.
+	 *
+	 * @param mixed $old Old option value.
+	 * @param mixed $new New option value.
+	 */
+	public function sync_htaccess( $old, $new ) {
+		unset( $old );
+		$htaccess = new Htaccess();
+
+		$hardening_on = ! empty( $new['hardening']['enabled'] );
+		if ( ! $hardening_on ) {
+			$htaccess->remove_all();
+			return;
+		}
+
+		$htaccess->sync(
+			! empty( $new['hardening']['block_php_uploads'] ),
+			! empty( $new['hardening']['protect_sensitive_files'] )
+		);
 	}
 
 	/**

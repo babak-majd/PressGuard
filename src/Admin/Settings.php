@@ -84,6 +84,8 @@ final class Settings {
 					array( 'key' => 'hardening.disable_file_edit', 'type' => 'checkbox', 'label' => __( 'Disable theme/plugin file editor', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'hardening.disable_xmlrpc', 'type' => 'checkbox', 'label' => __( 'Disable XML-RPC', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'hardening.hide_wp_version', 'type' => 'checkbox', 'label' => __( 'Hide WordPress version', 'pressguard' ), 'default' => false ),
+					array( 'key' => 'hardening.block_php_uploads', 'type' => 'checkbox', 'label' => __( 'Block PHP execution in uploads (.htaccess)', 'pressguard' ), 'default' => false ),
+					array( 'key' => 'hardening.protect_sensitive_files', 'type' => 'checkbox', 'label' => __( 'Deny access to sensitive files (.htaccess)', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'hardening.block_user_enumeration', 'type' => 'checkbox', 'label' => __( 'Block user enumeration', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'hardening.restrict_rest_anonymous', 'type' => 'checkbox', 'label' => __( 'Restrict REST API for anonymous', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'hardening.security_headers', 'type' => 'checkbox', 'label' => __( 'Send security headers', 'pressguard' ), 'default' => false ),

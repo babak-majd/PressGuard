@@ -85,9 +85,37 @@ final class EventsTable extends \WP_List_Table {
 
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( '' !== $search ) {
-			$like   = '%' . $wpdb->esc_like( $search ) . '%';
-			$where .= ' AND ( type LIKE %s OR module LIKE %s OR ip LIKE %s OR message LIKE %s )';
-			array_push( $params, $like, $like, $like, $like );
+			$like    = '%' . $wpdb->esc_like( $search ) . '%';
+			$clauses = array( 'type LIKE %s', 'module LIKE %s', 'ip LIKE %s', 'message LIKE %s' );
+			$args    = array( $like, $like, $like, $like );
+
+			// Severity: match by number (1-5) or by label ("warning", …).
+			$sev = $this->severity_from_search( $search );
+			if ( $sev > 0 ) {
+				$clauses[] = 'severity = %d';
+				$args[]    = $sev;
+			}
+
+			// User: resolve the term against login/display name/email, then
+			// match the stored user_id (the table only stores the id).
+			$user_ids = get_users(
+				array(
+					'search'         => '*' . $search . '*',
+					'search_columns' => array( 'user_login', 'display_name', 'user_email', 'user_nicename' ),
+					'fields'         => 'ID',
+					'number'         => 50,
+				)
+			);
+			if ( ! empty( $user_ids ) ) {
+				$placeholders = implode( ',', array_fill( 0, count( $user_ids ), '%d' ) );
+				$clauses[]    = "user_id IN ( {$placeholders} )";
+				foreach ( $user_ids as $uid ) {
+					$args[] = (int) $uid;
+				}
+			}
+
+			$where .= ' AND ( ' . implode( ' OR ', $clauses ) . ' )';
+			$params = array_merge( $params, $args );
 		}
 
 		$module = isset( $_REQUEST['module'] ) ? sanitize_key( wp_unslash( $_REQUEST['module'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -157,6 +185,29 @@ final class EventsTable extends \WP_List_Table {
 			default:
 				return '';
 		}
+	}
+
+	/**
+	 * Resolve a search term to a severity level (0 if not a severity).
+	 *
+	 * @param string $search Search term.
+	 * @return int 1–5, or 0.
+	 */
+	private function severity_from_search( $search ) {
+		$search = strtolower( trim( $search ) );
+
+		if ( is_numeric( $search ) ) {
+			$n = (int) $search;
+			return ( $n >= 1 && $n <= 5 ) ? $n : 0;
+		}
+
+		foreach ( $this->severity_labels as $level => $label ) {
+			if ( strtolower( $label ) === $search ) {
+				return (int) $level;
+			}
+		}
+
+		return 0;
 	}
 
 	/**
