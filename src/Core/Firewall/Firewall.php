@@ -8,6 +8,7 @@
 namespace PressGuard\Core\Firewall;
 
 use PressGuard\Core\Anomaly\Anomaly;
+use PressGuard\Core\Anomaly\RiskEngine;
 use PressGuard\Module;
 use PressGuard\Plugin;
 use PressGuard\Support\Ip;
@@ -128,8 +129,22 @@ final class Firewall implements Module {
 
 		$mode = (string) $config->get( 'firewall.mode', 'learning' );
 
+		// Behavioural risk: an IP misbehaving across many signals is blocked
+		// even if this single request is clean.
+		if ( (bool) $config->get( 'anomaly.risk_scoring', true ) ) {
+			$threshold = max( 10, (int) $config->get( 'anomaly.risk_block', 40 ) );
+			if ( RiskEngine::score( $ip ) >= $threshold ) {
+				$this->anomaly->record_hit( 'risk' );
+				if ( 'enabled' === $mode ) {
+					$this->block( $ip, array(), 0, 'risk_score' );
+					return;
+				}
+			}
+		}
+
 		// User-Agent blocklist (cheap, runs before rule matching).
 		if ( $this->ua->is_blocked() ) {
+			RiskEngine::record( $ip, 'ua' );
 			$this->anomaly->record_hit( 'ua' );
 			if ( 'enabled' === $mode ) {
 				$this->block( $ip, array(), 0, 'user_agent' );
@@ -139,6 +154,7 @@ final class Firewall implements Module {
 
 		// Country policy (GeoIP) — cached per IP, only when enabled.
 		if ( ( new Geo( $config ) )->is_blocked( $ip ) ) {
+			RiskEngine::record( $ip, 'geo' );
 			$this->anomaly->record_hit( 'geo' );
 			if ( 'enabled' === $mode ) {
 				$this->block( $ip, array(), 0, 'country' );
@@ -148,6 +164,7 @@ final class Firewall implements Module {
 
 		// Per-IP rate limiting.
 		if ( $this->rate_limited( $ip ) ) {
+			RiskEngine::record( $ip, 'rate' );
 			$this->anomaly->record_hit( 'rate' );
 			if ( 'enabled' === $mode ) {
 				$this->block( $ip, array(), 0, 'rate_limit' );
@@ -185,8 +202,10 @@ final class Firewall implements Module {
 			return;
 		}
 
-		// A real attack signal — feed the anomaly core (drives Under Attack).
+		// A real attack signal — feed the anomaly core (drives Under Attack)
+		// and the per-IP risk score.
 		$this->anomaly->record_hit( 'rule' );
+		RiskEngine::record( $ip, 'rule' );
 
 		if ( 'enabled' === $mode ) {
 			$this->block( $ip, $matched, $score, 'rule_match' );
