@@ -134,6 +134,7 @@ final class Plugin {
 			\PressGuard\Core\Permissions\Permissions::class,
 			\PressGuard\Core\Access\Access::class,
 			\PressGuard\Core\Activity\Activity::class,
+			\PressGuard\Core\Ssl\Ssl::class,
 			\PressGuard\Admin\Admin::class,
 		);
 	}
