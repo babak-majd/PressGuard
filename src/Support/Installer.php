@@ -64,7 +64,11 @@ final class Installer {
 			array(
 				'_schema'   => 1,
 				'login'     => array(
-					'enabled' => true,
+					'enabled'    => true,
+					'custom_url' => array(
+						'enabled' => false,
+						'slug'    => strtolower( wp_generate_password( 6, false, false ) ),
+					),
 				),
 				'hardening' => array(
 					'enabled' => true,

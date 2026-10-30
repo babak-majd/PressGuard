@@ -73,7 +73,7 @@ final class Settings {
 					array( 'key' => 'login.lockout.window', 'type' => 'number', 'label' => __( 'Counting window (seconds)', 'pressguard' ), 'default' => 900 ),
 					array( 'key' => 'login.two_factor.enabled', 'type' => 'checkbox', 'label' => __( 'Enable two-factor (TOTP)', 'pressguard' ), 'default' => true ),
 					array( 'key' => 'login.custom_url.enabled', 'type' => 'checkbox', 'label' => __( 'Custom login URL', 'pressguard' ), 'default' => false ),
-					array( 'key' => 'login.custom_url.slug', 'type' => 'text', 'label' => __( 'Login slug', 'pressguard' ), 'default' => '' ),
+					array( 'key' => 'login.custom_url.slug', 'type' => 'text', 'label' => __( 'Login slug', 'pressguard' ), 'default' => $this->default_login_slug() ),
 					array( 'key' => 'login.generic_errors', 'type' => 'checkbox', 'label' => __( 'Generic login errors', 'pressguard' ), 'default' => true ),
 				),
 			),
@@ -92,6 +92,31 @@ final class Settings {
 				),
 			),
 		);
+	}
+
+	/**
+	 * Default login slug: the stored value, or a freshly generated and
+	 * persisted 6-character random slug if none is set yet. This gives the
+	 * custom-login field a sensible, non-guessable default out of the box.
+	 *
+	 * @return string
+	 */
+	private function default_login_slug() {
+		$slug = (string) $this->plugin->config()->get( 'login.custom_url.slug', '' );
+		if ( '' === $slug ) {
+			$slug = self::generate_slug();
+			$this->plugin->config()->set( 'login.custom_url.slug', $slug );
+		}
+		return $slug;
+	}
+
+	/**
+	 * Generate a 6-character lowercase alphanumeric slug.
+	 *
+	 * @return string
+	 */
+	public static function generate_slug() {
+		return strtolower( wp_generate_password( 6, false, false ) );
 	}
 
 	/**
