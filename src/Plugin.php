@@ -126,6 +126,9 @@ final class Plugin {
 	 */
 	private function default_modules() {
 		return array(
+			// Compatibility first: it only attaches exemption filters, which the
+			// firewall consults when it inspects during its own registration.
+			\PressGuard\Core\Compat\Compatibility::class,
 			\PressGuard\Core\Firewall\Firewall::class,
 			\PressGuard\Core\Hardening\Hardening::class,
 			\PressGuard\Core\Login\Login::class,

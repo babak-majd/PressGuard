@@ -252,6 +252,17 @@ final class Firewall implements Module {
 	 * @return bool
 	 */
 	private function is_trusted_admin_context() {
+		/**
+		 * Let compatibility integrations (WooCommerce, Elementor, Gutenberg,
+		 * PressPilot, …) mark the current request as trusted so POST-body rule
+		 * matching is skipped — while IP/UA/rate/geo checks still apply.
+		 *
+		 * @param bool $trusted Whether the request is a trusted first-party context.
+		 */
+		if ( apply_filters( 'pressguard_firewall_trusted_context', false ) ) {
+			return true;
+		}
+
 		$uri  = $this->request_uri();
 		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 
