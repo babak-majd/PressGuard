@@ -129,6 +129,9 @@ final class Plugin {
 			\PressGuard\Core\Firewall\Firewall::class,
 			\PressGuard\Core\Hardening\Hardening::class,
 			\PressGuard\Core\Login\Login::class,
+			\PressGuard\Core\Scanner\Scanner::class,
+			\PressGuard\Core\Audit\Audit::class,
+			\PressGuard\Core\Permissions\Permissions::class,
 			\PressGuard\Admin\Admin::class,
 		);
 	}

@@ -96,6 +96,12 @@ final class EventsTable extends \WP_List_Table {
 			$params[] = $module;
 		}
 
+		$severity = isset( $_REQUEST['severity'] ) ? (int) $_REQUEST['severity'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( $severity > 0 ) {
+			$where   .= ' AND severity = %d';
+			$params[] = $severity;
+		}
+
 		$count_sql = "SELECT COUNT(*) FROM {$table} WHERE {$where}";
 		$total     = $params
 			? (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $params ) )
@@ -151,6 +157,46 @@ final class EventsTable extends \WP_List_Table {
 			default:
 				return '';
 		}
+	}
+
+	/**
+	 * Module + severity filter controls in the table nav.
+	 *
+	 * @param string $which Which nav ("top" or "bottom").
+	 */
+	public function extra_tablenav( $which ) {
+		if ( 'top' !== $which ) {
+			return;
+		}
+
+		global $wpdb;
+		$table = Db::events_table();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+		$modules = $wpdb->get_col( "SELECT DISTINCT module FROM {$table} WHERE module <> '' ORDER BY module ASC" );
+
+		$cur_module = isset( $_REQUEST['module'] ) ? sanitize_key( wp_unslash( $_REQUEST['module'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$cur_sev    = isset( $_REQUEST['severity'] ) ? (int) $_REQUEST['severity'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		?>
+		<div class="alignleft actions">
+			<label class="screen-reader-text" for="pg-filter-module"><?php esc_html_e( 'Filter by module', 'pressguard' ); ?></label>
+			<select name="module" id="pg-filter-module">
+				<option value=""><?php esc_html_e( 'All modules', 'pressguard' ); ?></option>
+				<?php foreach ( (array) $modules as $m ) : ?>
+					<option value="<?php echo esc_attr( $m ); ?>" <?php selected( $cur_module, $m ); ?>><?php echo esc_html( $m ); ?></option>
+				<?php endforeach; ?>
+			</select>
+
+			<label class="screen-reader-text" for="pg-filter-severity"><?php esc_html_e( 'Filter by severity', 'pressguard' ); ?></label>
+			<select name="severity" id="pg-filter-severity">
+				<option value="0"><?php esc_html_e( 'All severities', 'pressguard' ); ?></option>
+				<?php foreach ( $this->severity_labels as $level => $label ) : ?>
+					<option value="<?php echo (int) $level; ?>" <?php selected( $cur_sev, $level ); ?>><?php echo esc_html( $label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+
+			<?php submit_button( __( 'Filter', 'pressguard' ), '', 'filter_action', false, array( 'id' => 'pg-event-filter' ) ); ?>
+		</div>
+		<?php
 	}
 
 	/**

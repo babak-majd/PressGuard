@@ -45,17 +45,12 @@
 	margin-top: 24px;
 }
 
-/* Dark-mode-friendly surfaces follow the admin scheme where available. */
-@media ( prefers-color-scheme: dark ) {
-	.pressguard-card {
-		background: #1d2327;
-		border-color: #3c434a;
-	}
-
-	.pressguard-card__value {
-		color: #f0f0f1;
-	}
-}
+/*
+ * Intentionally no prefers-color-scheme override: wp-admin does not follow the
+ * browser's dark mode (it follows the user's admin color scheme), so matching
+ * the browser here would make our boxes dark while the rest of wp-admin stays
+ * light. We use the same surface tokens as core cards to stay WordPress-like.
+ */
 
 /* RTL tweak: the colored accent moves to the right edge. */
 .rtl .pressguard-card {
