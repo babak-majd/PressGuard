@@ -132,6 +132,8 @@ final class Plugin {
 			\PressGuard\Core\Scanner\Scanner::class,
 			\PressGuard\Core\Audit\Audit::class,
 			\PressGuard\Core\Permissions\Permissions::class,
+			\PressGuard\Core\Access\Access::class,
+			\PressGuard\Core\Activity\Activity::class,
 			\PressGuard\Admin\Admin::class,
 		);
 	}
