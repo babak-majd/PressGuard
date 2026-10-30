@@ -7,6 +7,7 @@
 
 namespace PressGuard\Core\Firewall;
 
+use PressGuard\Core\Anomaly\Anomaly;
 use PressGuard\Module;
 use PressGuard\Plugin;
 use PressGuard\Support\Ip;
@@ -37,13 +38,29 @@ final class Firewall implements Module {
 	private $ip;
 
 	/**
+	 * User-Agent evaluator.
+	 *
+	 * @var UserAgent
+	 */
+	private $ua;
+
+	/**
+	 * Anomaly core.
+	 *
+	 * @var Anomaly
+	 */
+	private $anomaly;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Plugin $plugin Container.
 	 */
 	public function __construct( Plugin $plugin ) {
-		$this->plugin = $plugin;
-		$this->ip     = new Ip( $plugin->config() );
+		$this->plugin  = $plugin;
+		$this->ip      = new Ip( $plugin->config() );
+		$this->ua      = new UserAgent( $plugin->config() );
+		$this->anomaly = new Anomaly( $plugin );
 	}
 
 	/**
@@ -65,6 +82,12 @@ final class Firewall implements Module {
 		// Never inspect CLI/cron; those are not attacker-controlled web input.
 		if ( ( defined( 'WP_CLI' ) && WP_CLI ) || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
 			return;
+		}
+
+		// Local Under Attack challenge runs later (template_redirect); register
+		// it before inspect() so the hook is in place even on clean requests.
+		if ( (bool) $config->get( 'firewall.under_attack.enabled', true ) ) {
+			( new UnderAttack( $this->plugin ) )->register();
 		}
 
 		$this->inspect();
@@ -98,6 +121,26 @@ final class Firewall implements Module {
 			return;
 		}
 
+		$mode = (string) $config->get( 'firewall.mode', 'learning' );
+
+		// User-Agent blocklist (cheap, runs before rule matching).
+		if ( $this->ua->is_blocked() ) {
+			$this->anomaly->record_hit( 'ua' );
+			if ( 'enabled' === $mode ) {
+				$this->block( $ip, array(), 0, 'user_agent' );
+				return;
+			}
+		}
+
+		// Per-IP rate limiting.
+		if ( $this->rate_limited( $ip ) ) {
+			$this->anomaly->record_hit( 'rate' );
+			if ( 'enabled' === $mode ) {
+				$this->block( $ip, array(), 0, 'rate_limit' );
+				return;
+			}
+		}
+
 		$values = $this->collect_values();
 		if ( empty( $values ) ) {
 			return;
@@ -118,7 +161,7 @@ final class Firewall implements Module {
 				$score    += $rule->score;
 				$matched[] = $rule->id;
 				// Early exit once we're clearly over threshold in blocking mode.
-				if ( $score >= $threshold && 'enabled' === $config->get( 'firewall.mode', 'learning' ) ) {
+				if ( $score >= $threshold && 'enabled' === $mode ) {
 					break;
 				}
 			}
@@ -128,7 +171,8 @@ final class Firewall implements Module {
 			return;
 		}
 
-		$mode = (string) $config->get( 'firewall.mode', 'learning' );
+		// A real attack signal — feed the anomaly core (drives Under Attack).
+		$this->anomaly->record_hit( 'rule' );
 
 		if ( 'enabled' === $mode ) {
 			$this->block( $ip, $matched, $score, 'rule_match' );
@@ -233,6 +277,48 @@ final class Firewall implements Module {
 		echo '<h1>403 Forbidden</h1><p>This request was blocked by PressGuard.</p>';
 		echo '</body></html>';
 		exit;
+	}
+
+	/**
+	 * Per-IP rate limiting over a short sliding window. Logged-in users,
+	 * whitelisted IPs, and verified good bots are exempt. The (slower)
+	 * good-bot DNS check only runs once an IP is already over the limit.
+	 *
+	 * @param string $ip Client IP.
+	 * @return bool True when the request should be rate-limited.
+	 */
+	private function rate_limited( $ip ) {
+		$config = $this->plugin->config();
+		if ( ! (bool) $config->get( 'firewall.rate_limit.enabled', false ) || '' === $ip ) {
+			return false;
+		}
+
+		// Cheap logged-in exemption: the auth cookie is present before
+		// pluggable functions load, so check its presence (not validity).
+		foreach ( array_keys( $_COOKIE ) as $cookie_name ) {
+			if ( 0 === strpos( (string) $cookie_name, 'wordpress_logged_in' ) ) {
+				return false;
+			}
+		}
+
+		$max    = max( 10, (int) $config->get( 'firewall.rate_limit.max', 240 ) );
+		$window = max( 10, (int) $config->get( 'firewall.rate_limit.window', 60 ) );
+		$bucket = (int) floor( time() / $window );
+		$key    = 'pressguard_rl_' . md5( $ip ) . '_' . $bucket;
+
+		$count = (int) get_transient( $key ) + 1;
+		set_transient( $key, $count, $window );
+
+		if ( $count <= $max ) {
+			return false;
+		}
+
+		// Over the limit — exempt verified good crawlers before penalizing.
+		if ( $this->ua->is_verified_good_bot( $ip ) ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

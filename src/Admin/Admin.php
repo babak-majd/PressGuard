@@ -54,6 +54,8 @@ final class Admin implements Module {
 			return;
 		}
 
+		( new Settings( $this->plugin ) )->register();
+
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_filter( 'admin_footer_text', array( $this, 'footer_text' ) );
