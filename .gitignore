@@ -22,3 +22,7 @@ AGENTS.md
 **/SKILL.md
 *.skill
 .ai/
+
+# Project docs / dev-only (not shipped)
+ARCHITECTURE.md
+languages/_gen.php

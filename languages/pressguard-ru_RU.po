@@ -1,0 +1,711 @@
+# Copyright (C) 2026 Babak Majd
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: PressGuard 0.1.0-dev\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/pressguard\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-30T09:02:02+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: pressguard\n"
+
+#. Plugin Name of the plugin
+#: pressguard.php
+#: src/Admin/Admin.php:73
+#: src/Admin/Admin.php:74
+#: src/Admin/Admin.php:164
+msgid "PressGuard"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: pressguard.php
+msgid "https://github.com/babak-majd/PressGuard"
+msgstr ""
+
+#. Description of the plugin
+#: pressguard.php
+msgid "Complete, free WordPress security — firewall, login protection, hardening, malware & security scanning, roles & activity, SSL and more. Nothing less than the big paid plugins, fully free."
+msgstr ""
+
+#. Author of the plugin
+#: pressguard.php
+msgid "Babak Majd"
+msgstr ""
+
+#. Author URI of the plugin
+#: pressguard.php
+msgid "https://bobclub.ir"
+msgstr ""
+
+#. translators: 1: required PHP version, 2: required WordPress version
+#: pressguard.php:60
+#, php-format
+msgid "PressGuard requires PHP %1$s+ and WordPress %2$s+. The plugin is inactive until the environment is updated."
+msgstr ""
+
+#: src/Admin/Admin.php:84
+#: src/Admin/Admin.php:85
+#: src/Admin/Admin.php:261
+msgid "Dashboard"
+msgstr "Панель"
+
+#: src/Admin/Admin.php:93
+#: src/Admin/Admin.php:94
+#: src/Admin/Admin.php:202
+msgid "Activity Log"
+msgstr "Журнал активности"
+
+#: src/Admin/Admin.php:142
+#: src/Admin/Settings.php:54
+msgid "Firewall"
+msgstr "Брандмауэр"
+
+#: src/Admin/Admin.php:147
+msgid "Login protection"
+msgstr "Защита входа"
+
+#: src/Admin/Admin.php:148
+#: src/Admin/Admin.php:153
+msgid "On"
+msgstr "Вкл"
+
+#: src/Admin/Admin.php:148
+#: src/Admin/Admin.php:153
+msgid "Off"
+msgstr "Выкл"
+
+#: src/Admin/Admin.php:152
+#: src/Admin/Settings.php:81
+msgid "Hardening"
+msgstr "Усиление защиты"
+
+#: src/Admin/Admin.php:157
+msgid "Extended WAF"
+msgstr ""
+
+#: src/Admin/Admin.php:158
+msgid "Active (pre-WordPress)"
+msgstr ""
+
+#: src/Admin/Admin.php:158
+msgid "Not installed"
+msgstr ""
+
+#: src/Admin/Admin.php:166
+msgid "Complete, free WordPress security. More modules arrive as you enable them."
+msgstr ""
+
+#: src/Admin/Admin.php:180
+msgid "If PressGuard saves you time:"
+msgstr ""
+
+#: src/Admin/Admin.php:182
+msgid "buy me a coffee"
+msgstr ""
+
+#: src/Admin/Admin.php:204
+msgid "Security events and user activity. Older rows are purged automatically to keep the database lean."
+msgstr ""
+
+#: src/Admin/Admin.php:209
+msgid "Search"
+msgstr ""
+
+#: src/Admin/Admin.php:226
+#: src/Admin/Settings.php:192
+#: src/Core/Login/TwoFactor.php:234
+msgid "Enabled"
+msgstr "Включено"
+
+#: src/Admin/Admin.php:228
+#: src/Admin/Settings.php:50
+msgid "Detection only"
+msgstr "Только обнаружение"
+
+#: src/Admin/Admin.php:230
+msgid "Learning"
+msgstr ""
+
+#. translators: %s: coffee link
+#: src/Admin/Admin.php:245
+#, php-format
+msgid "Thanks for using PressGuard. %s"
+msgstr ""
+
+#: src/Admin/Admin.php:246
+msgid "Buy me a coffee"
+msgstr ""
+
+#: src/Admin/EventsTable.php:44
+msgid "Debug"
+msgstr ""
+
+#: src/Admin/EventsTable.php:45
+msgid "Notice"
+msgstr ""
+
+#: src/Admin/EventsTable.php:46
+msgid "Warning"
+msgstr ""
+
+#: src/Admin/EventsTable.php:47
+msgid "Error"
+msgstr ""
+
+#: src/Admin/EventsTable.php:48
+msgid "Critical"
+msgstr ""
+
+#: src/Admin/EventsTable.php:59
+msgid "Time"
+msgstr ""
+
+#: src/Admin/EventsTable.php:60
+msgid "Module"
+msgstr ""
+
+#: src/Admin/EventsTable.php:61
+msgid "Event"
+msgstr ""
+
+#: src/Admin/EventsTable.php:62
+#: src/Core/Audit/Audit.php:204
+#: src/Core/Scanner/Scanner.php:589
+msgid "Severity"
+msgstr ""
+
+#: src/Admin/EventsTable.php:63
+msgid "User"
+msgstr ""
+
+#: src/Admin/EventsTable.php:64
+msgid "IP"
+msgstr ""
+
+#: src/Admin/EventsTable.php:65
+msgid "Details"
+msgstr ""
+
+#: src/Admin/EventsTable.php:232
+msgid "Filter by module"
+msgstr ""
+
+#: src/Admin/EventsTable.php:234
+msgid "All modules"
+msgstr ""
+
+#: src/Admin/EventsTable.php:240
+msgid "Filter by severity"
+msgstr ""
+
+#: src/Admin/EventsTable.php:242
+msgid "All severities"
+msgstr ""
+
+#: src/Admin/EventsTable.php:248
+msgid "Filter"
+msgstr ""
+
+#: src/Admin/EventsTable.php:257
+msgid "No activity recorded yet."
+msgstr ""
+
+#: src/Admin/Settings.php:48
+msgid "General"
+msgstr "Основные"
+
+#: src/Admin/Settings.php:50
+msgid "Firewall mode"
+msgstr "Режим брандмауэра"
+
+#: src/Admin/Settings.php:50
+msgid "Learning (log only)"
+msgstr ""
+
+#: src/Admin/Settings.php:50
+msgid "Enabled (block)"
+msgstr ""
+
+#: src/Admin/Settings.php:56
+msgid "Enable firewall"
+msgstr ""
+
+#: src/Admin/Settings.php:57
+msgid "Anomaly score threshold"
+msgstr ""
+
+#: src/Admin/Settings.php:58
+msgid "Enable rate limiting"
+msgstr ""
+
+#: src/Admin/Settings.php:59
+msgid "Max requests / window"
+msgstr ""
+
+#: src/Admin/Settings.php:60
+msgid "Window (seconds)"
+msgstr ""
+
+#: src/Admin/Settings.php:61
+msgid "Block empty User-Agents"
+msgstr ""
+
+#: src/Admin/Settings.php:62
+msgid "Under Attack mode (manual)"
+msgstr ""
+
+#: src/Admin/Settings.php:63
+msgid "Auto Under Attack on detected surge"
+msgstr ""
+
+#: src/Admin/Settings.php:64
+msgid "Extended WAF (run before WordPress via auto_prepend_file)"
+msgstr ""
+
+#: src/Admin/Settings.php:68
+msgid "Login"
+msgstr "Вход"
+
+#: src/Admin/Settings.php:70
+msgid "Enable login protection"
+msgstr ""
+
+#: src/Admin/Settings.php:71
+msgid "Lockout after failed logins"
+msgstr ""
+
+#: src/Admin/Settings.php:72
+msgid "Max attempts"
+msgstr ""
+
+#: src/Admin/Settings.php:73
+msgid "Counting window (seconds)"
+msgstr ""
+
+#: src/Admin/Settings.php:74
+msgid "Enable two-factor (TOTP)"
+msgstr ""
+
+#: src/Admin/Settings.php:75
+msgid "Custom login URL"
+msgstr ""
+
+#: src/Admin/Settings.php:76
+msgid "Login slug"
+msgstr ""
+
+#: src/Admin/Settings.php:77
+msgid "Generic login errors"
+msgstr ""
+
+#: src/Admin/Settings.php:83
+msgid "Enable hardening"
+msgstr ""
+
+#: src/Admin/Settings.php:84
+msgid "Disable theme/plugin file editor"
+msgstr ""
+
+#: src/Admin/Settings.php:85
+msgid "Disable XML-RPC"
+msgstr ""
+
+#: src/Admin/Settings.php:86
+msgid "Hide WordPress version"
+msgstr ""
+
+#: src/Admin/Settings.php:87
+msgid "Block PHP execution in uploads (.htaccess)"
+msgstr ""
+
+#: src/Admin/Settings.php:88
+msgid "Deny access to sensitive files (.htaccess)"
+msgstr ""
+
+#: src/Admin/Settings.php:89
+msgid "Block user enumeration"
+msgstr ""
+
+#: src/Admin/Settings.php:90
+msgid "Restrict REST API for anonymous"
+msgstr ""
+
+#: src/Admin/Settings.php:91
+msgid "Send security headers"
+msgstr ""
+
+#: src/Admin/Settings.php:106
+#: src/Admin/Settings.php:107
+msgid "Settings"
+msgstr "Настройки"
+
+#: src/Admin/Settings.php:143
+msgid "PressGuard Settings"
+msgstr ""
+
+#: src/Admin/Settings.php:145
+msgid "Settings saved."
+msgstr "Настройки сохранены."
+
+#: src/Admin/Settings.php:168
+msgid "Save Changes"
+msgstr "Сохранить изменения"
+
+#: src/Core/Audit/Audit.php:58
+#: src/Core/Audit/Audit.php:190
+msgid "Security Audit"
+msgstr "Аудит безопасности"
+
+#: src/Core/Audit/Audit.php:59
+msgid "Audit"
+msgstr "Аудит"
+
+#: src/Core/Audit/Audit.php:83
+msgid "WordPress core is out of date."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:83
+msgid "Update WordPress from Dashboard → Updates."
+msgstr ""
+
+#. translators: %d: count
+#: src/Core/Audit/Audit.php:86
+#, php-format
+msgid "%d plugin update(s) available."
+msgstr ""
+
+#. translators: %d: count
+#: src/Core/Audit/Audit.php:86
+msgid "Update plugins — outdated plugins are the #1 attack vector."
+msgstr ""
+
+#. translators: %d: count
+#: src/Core/Audit/Audit.php:89
+#, php-format
+msgid "%d theme update(s) available."
+msgstr ""
+
+#. translators: %d: count
+#: src/Core/Audit/Audit.php:89
+msgid "Update your themes."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:95
+msgid "WP_DEBUG is enabled."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:95
+msgid "Disable WP_DEBUG on production sites."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:100
+msgid "Database uses the default \"wp_\" table prefix."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:100
+msgid "A non-default prefix adds a small layer of obscurity."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:105
+msgid "A user named \"admin\" exists."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:105
+msgid "Create a new admin with a unique name and remove \"admin\"."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:110
+msgid "The theme/plugin file editor is enabled."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:110
+msgid "Enable “Disable file editor” in PressGuard → Settings → Hardening."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:115
+msgid "XML-RPC is enabled."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:115
+msgid "Disable XML-RPC if you do not use it (Hardening)."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:120
+msgid "The site is not using HTTPS."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:120
+msgid "Install an SSL certificate and force HTTPS."
+msgstr ""
+
+#. translators: %s: filename
+#: src/Core/Audit/Audit.php:126
+#, php-format
+msgid "Exposed file: %s"
+msgstr ""
+
+#. translators: %s: filename
+#: src/Core/Audit/Audit.php:126
+msgid "Delete or block access to this file."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:130
+msgid "A debug.log file is present in wp-content."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:130
+msgid "Remove debug.log or block public access to it."
+msgstr ""
+
+#. translators: %d: count
+#: src/Core/Audit/Audit.php:141
+#, php-format
+msgid "%d path(s) have risky permissions."
+msgstr ""
+
+#. translators: %d: count
+#: src/Core/Audit/Audit.php:141
+msgid "Review PressGuard → Permissions and fix the flagged entries."
+msgstr ""
+
+#: src/Core/Audit/Audit.php:187
+msgid "Low"
+msgstr ""
+
+#: src/Core/Audit/Audit.php:187
+msgid "Medium"
+msgstr ""
+
+#: src/Core/Audit/Audit.php:187
+msgid "High"
+msgstr ""
+
+#: src/Core/Audit/Audit.php:194
+msgid "Security score"
+msgstr "Оценка безопасности"
+
+#: src/Core/Audit/Audit.php:200
+msgid "No issues found. Nicely locked down!"
+msgstr ""
+
+#: src/Core/Audit/Audit.php:205
+msgid "Finding"
+msgstr ""
+
+#: src/Core/Audit/Audit.php:206
+msgid "How to fix"
+msgstr ""
+
+#: src/Core/Firewall/UnderAttack.php:164
+msgid "Checking your browser…"
+msgstr ""
+
+#: src/Core/Firewall/UnderAttack.php:181
+msgid "Checking your browser before continuing…"
+msgstr ""
+
+#: src/Core/Firewall/UnderAttack.php:182
+msgid "Please enable JavaScript to continue."
+msgstr ""
+
+#: src/Core/Hardening/Hardening.php:217
+msgid "REST API access is restricted to authenticated users."
+msgstr ""
+
+#. translators: %d: seconds remaining
+#: src/Core/Login/Lockout.php:78
+#, php-format
+msgid "Too many failed attempts. Try again in %d seconds."
+msgstr ""
+
+#: src/Core/Login/Login.php:88
+msgid "Invalid login details."
+msgstr "Неверные данные для входа."
+
+#: src/Core/Login/LoginUrl.php:100
+msgid "Page not found."
+msgstr ""
+
+#: src/Core/Login/LoginUrl.php:101
+msgid "Not Found"
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:94
+msgid "<strong>Two-factor code required.</strong> Enter the code from your authenticator app."
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:113
+msgid "<strong>Invalid two-factor code.</strong> Please try again."
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:177
+msgid "Two-factor code (if enabled)"
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:228
+msgid "PressGuard — Two-Factor Authentication"
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:231
+#: src/Core/Permissions/Permissions.php:232
+msgid "Status"
+msgstr "Статус"
+
+#: src/Core/Login/TwoFactor.php:237
+msgid "Disable two-factor authentication"
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:241
+msgid "Scan this key in your authenticator app, then enter a code to confirm."
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:248
+msgid "Verification code"
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:254
+msgid "Enable two-factor authentication"
+msgstr ""
+
+#: src/Core/Login/TwoFactor.php:301
+msgid "The two-factor code did not match. 2FA was not enabled."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:57
+#: src/Core/Permissions/Permissions.php:211
+msgid "File Permissions"
+msgstr "Права на файлы"
+
+#: src/Core/Permissions/Permissions.php:58
+msgid "Permissions"
+msgstr "Права доступа"
+
+#: src/Core/Permissions/Permissions.php:111
+msgid "World-writable."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:114
+msgid "More permissive than recommended."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:122
+msgid "Accessible to other users (should be 600–640)."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:143
+msgid "Not allowed."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:212
+msgid "Recommended: directories 755, files 644, wp-config.php 640. Fixes use PHP chmod and are only offered for risky entries."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:219
+msgid "Permission updated."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:220
+msgid "Cannot change this permission on this host — fix it manually via your host/SFTP."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:221
+msgid "No change made."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:229
+msgid "Path"
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:230
+msgid "Current"
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:231
+msgid "Recommended"
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:245
+msgid "OK"
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:255
+msgid "Change this permission? You can revert via your host if needed."
+msgstr ""
+
+#: src/Core/Permissions/Permissions.php:256
+#, php-format
+msgid "Fix to %o"
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:76
+msgid "Scan"
+msgstr "Сканирование"
+
+#: src/Core/Scanner/Scanner.php:107
+msgid "Scanning…"
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:108
+msgid "Scan complete."
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:109
+#, php-format
+msgid "%1$d / %2$d files"
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:404
+msgid "Core file missing."
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:411
+msgid "Core file does not match the official checksum."
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:545
+msgid "Malware &amp; Integrity Scan"
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:546
+msgid "Scans every file (including all .htaccess files) and verifies WordPress core. The scan continues on the server even if you close this tab."
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:550
+msgid "Run scan now"
+msgstr "Запустить сканирование"
+
+#. translators: 1: files scanned, 2: findings, 3: seconds
+#: src/Core/Scanner/Scanner.php:564
+#, php-format
+msgid "Scanned %1$d files — %2$d findings%3$s."
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:583
+msgid "Scan report"
+msgstr "Отчёт сканирования"
+
+#: src/Core/Scanner/Scanner.php:585
+msgid "No threats found."
+msgstr "Угроз не найдено."
+
+#: src/Core/Scanner/Scanner.php:590
+msgid "Type"
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:591
+msgid "File"
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:592
+msgid "Detail"
+msgstr ""
+
+#: src/Core/Scanner/Scanner.php:606
+#, php-format
+msgid "Showing first 1000 of %d findings."
+msgstr ""
