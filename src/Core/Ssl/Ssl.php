@@ -175,23 +175,41 @@ final class Ssl implements Module {
 			$config->set( 'ssl.hsts', ! empty( $_POST['hsts'] ) );
 			$config->set( 'ssl.fix_mixed_content', ! empty( $_POST['fix_mixed_content'] ) );
 		} elseif ( 'issue' === $do ) {
-			$domains = array_filter( array_map( 'trim', explode( ',', isset( $_POST['domains'] ) ? sanitize_text_field( wp_unslash( $_POST['domains'] ) ) : '' ) ) );
-			$email   = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-			$method  = isset( $_POST['method'] ) ? sanitize_key( wp_unslash( $_POST['method'] ) ) : 'http-01';
-			$staging = ! empty( $_POST['staging'] );
+			$domains  = array_filter( array_map( 'trim', explode( ',', isset( $_POST['domains'] ) ? sanitize_text_field( wp_unslash( $_POST['domains'] ) ) : '' ) ) );
+			$email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+			$method   = isset( $_POST['method'] ) ? sanitize_key( wp_unslash( $_POST['method'] ) ) : 'http-01';
+			$provider = isset( $_POST['dns_provider'] ) ? sanitize_key( wp_unslash( $_POST['dns_provider'] ) ) : 'manual';
+			$staging  = ! empty( $_POST['staging'] );
 			if ( ! empty( $_POST['cf_token'] ) ) {
 				$config->set( 'ssl.cloudflare_token', Crypto::encrypt( sanitize_text_field( wp_unslash( $_POST['cf_token'] ) ) ) );
 			}
 			$config->set( 'ssl.acme.email', $email );
 			$config->set( 'ssl.acme.domains', array_values( $domains ) );
 			$config->set( 'ssl.acme.method', $method );
+			$config->set( 'ssl.acme.dns_provider', $provider );
 			$config->set( 'ssl.acme.staging', $staging );
 
-			$result = $this->issue( $domains, $email, $method, $staging );
+			if ( 'dns-01' === $method && 'manual' === $provider ) {
+				// Two-step for manual DNS (any CDN/registrar): show the TXT
+				// records now, finish after the user adds them.
+				$result = $this->start_manual_dns( $domains, $email, $staging );
+				$notice = $result['ok'] ? 'manual_pending' : 'error:' . rawurlencode( $result['message'] );
+			} else {
+				$result = $this->issue( $domains, $email, $method, $staging );
+				$notice = $result['ok'] ? 'issued' : 'error:' . rawurlencode( $result['message'] );
+				if ( $result['ok'] && ! wp_next_scheduled( self::CRON_HOOK ) ) {
+					wp_schedule_event( time() + DAY_IN_SECONDS, 'daily', self::CRON_HOOK );
+				}
+			}
+		} elseif ( 'continue_manual' === $do ) {
+			$result = $this->finish_manual_dns();
 			$notice = $result['ok'] ? 'issued' : 'error:' . rawurlencode( $result['message'] );
 			if ( $result['ok'] && ! wp_next_scheduled( self::CRON_HOOK ) ) {
 				wp_schedule_event( time() + DAY_IN_SECONDS, 'daily', self::CRON_HOOK );
 			}
+		} elseif ( 'cancel_manual' === $do ) {
+			$config->set( 'ssl.pending', array() );
+			$notice = 'saved';
 		}
 
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::ADMIN_SLUG . '&notice=' . $notice ) );
@@ -255,6 +273,120 @@ final class Ssl implements Module {
 			$this->plugin->logger()->log( 'ssl', 'cert_issued', array( 'severity' => 2, 'message' => 'Certificate issued for ' . implode( ', ', $domains ) ) );
 
 			return array( 'ok' => true, 'message' => 'Certificate issued. Install it or follow the guidance below.' );
+		} catch ( \Throwable $e ) {
+			return array( 'ok' => false, 'message' => $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Manual DNS-01 step 1: create the order and return the TXT records the
+	 * user must add at their DNS/CDN provider. State is persisted so step 2 can
+	 * finish after the records propagate.
+	 *
+	 * @param string[] $domains Domains.
+	 * @param string   $email   Email.
+	 * @param bool     $staging Staging.
+	 * @return array{ok:bool,message:string}
+	 */
+	public function start_manual_dns( array $domains, $email, $staging ) {
+		if ( empty( $domains ) || '' === $email ) {
+			return array( 'ok' => false, 'message' => 'Domains and email are required.' );
+		}
+		$config = $this->plugin->config();
+		$dir    = $staging ? 'https://acme-staging-v02.api.letsencrypt.org/directory' : 'https://acme-v02.api.letsencrypt.org/directory';
+
+		$account_key = Crypto::decrypt( (string) $config->get( 'ssl.acme.account_key', '' ) );
+		if ( '' === $account_key ) {
+			$account_key = Acme::generate_rsa_key();
+			$config->set( 'ssl.acme.account_key', Crypto::encrypt( $account_key ) );
+		}
+
+		try {
+			$acme    = new Acme( $account_key, $dir );
+			$acme->register_account( $email );
+			$ordered = $acme->new_order( $domains );
+			$order   = $ordered['order'];
+
+			$records = array();
+			foreach ( (array) $order['authorizations'] as $authz_url ) {
+				$authz = $acme->get_authorization( $authz_url );
+				$chal  = null;
+				foreach ( (array) $authz['challenges'] as $c ) {
+					if ( 'dns-01' === ( $c['type'] ?? '' ) ) {
+						$chal = $c;
+						break;
+					}
+				}
+				if ( ! $chal ) {
+					return array( 'ok' => false, 'message' => 'No DNS-01 challenge offered.' );
+				}
+				$domain    = $authz['identifier']['value'] ?? '';
+				$records[] = array(
+					'domain'        => $domain,
+					'name'          => '_acme-challenge.' . ltrim( $domain, '*.' ),
+					'value'         => $acme->dns_txt_value( $chal['token'] ),
+					'challenge_url' => $chal['url'],
+					'authz_url'     => $authz_url,
+				);
+			}
+
+			$config->set(
+				'ssl.pending',
+				array(
+					'dir'       => $dir,
+					'order'     => $order,
+					'domains'   => array_values( $domains ),
+					'email'     => $email,
+					'records'   => $records,
+					'created'   => time(),
+				)
+			);
+
+			return array( 'ok' => true, 'message' => 'Add the TXT records below, then click Continue.' );
+		} catch ( \Throwable $e ) {
+			return array( 'ok' => false, 'message' => $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Manual DNS-01 step 2: tell ACME the records are in place, validate, and
+	 * finalize/download the certificate.
+	 *
+	 * @return array{ok:bool,message:string}
+	 */
+	public function finish_manual_dns() {
+		$config  = $this->plugin->config();
+		$pending = (array) $config->get( 'ssl.pending', array() );
+		if ( empty( $pending['records'] ) ) {
+			return array( 'ok' => false, 'message' => 'No pending certificate request.' );
+		}
+
+		$account_key = Crypto::decrypt( (string) $config->get( 'ssl.acme.account_key', '' ) );
+		try {
+			$acme = new Acme( $account_key, $pending['dir'] );
+			$acme->register_account( $pending['email'] );
+
+			foreach ( $pending['records'] as $rec ) {
+				$acme->notify_ready( $rec['challenge_url'] );
+			}
+			foreach ( $pending['records'] as $rec ) {
+				if ( 'valid' !== $acme->poll_authorization( $rec['authz_url'] ) ) {
+					return array( 'ok' => false, 'message' => 'DNS validation failed for ' . $rec['domain'] . '. Check the TXT record.' );
+				}
+			}
+
+			$cert_key = Acme::generate_rsa_key();
+			$chain    = $acme->finalize_and_download( $pending['order'], $cert_key, $pending['domains'] );
+
+			$config->set( 'ssl.cert.key', Crypto::encrypt( $cert_key ) );
+			$config->set( 'ssl.cert.chain', $chain );
+			$config->set( 'ssl.cert.issued', time() );
+			$config->set( 'ssl.cert.expires', $this->cert_expiry( $chain ) );
+			$config->set( 'ssl.pending', array() );
+
+			$this->plugin->logger()->log( 'ssl', 'cert_issued', array( 'severity' => 2, 'message' => 'Certificate issued (manual DNS) for ' . implode( ', ', $pending['domains'] ) ) );
+
+			return array( 'ok' => true, 'message' => 'Certificate issued.' );
 		} catch ( \Throwable $e ) {
 			return array( 'ok' => false, 'message' => $e->getMessage() );
 		}
@@ -380,8 +512,47 @@ final class Ssl implements Module {
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Certificate issued.', 'pressguard' ); ?></p></div>
 			<?php elseif ( 'saved' === $notice ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved.', 'pressguard' ); ?></p></div>
+			<?php elseif ( 'manual_pending' === $notice ) : ?>
+				<div class="notice notice-info"><p><?php esc_html_e( 'Add the DNS TXT record(s) below at your DNS/CDN provider, wait a minute for propagation, then click Continue.', 'pressguard' ); ?></p></div>
 			<?php elseif ( 0 === strpos( $notice, 'error:' ) ) : ?>
 				<div class="notice notice-error is-dismissible"><p><?php echo esc_html( rawurldecode( substr( $notice, 6 ) ) ); ?></p></div>
+			<?php endif; ?>
+
+			<?php
+			$pending = (array) $config->get( 'ssl.pending', array() );
+			if ( ! empty( $pending['records'] ) ) :
+				?>
+				<h2><?php esc_html_e( 'Pending DNS-01 — add these TXT records', 'pressguard' ); ?></h2>
+				<table class="widefat striped" style="max-width:760px;">
+					<thead><tr>
+						<th><?php esc_html_e( 'Type', 'pressguard' ); ?></th>
+						<th><?php esc_html_e( 'Name / Host', 'pressguard' ); ?></th>
+						<th><?php esc_html_e( 'Value', 'pressguard' ); ?></th>
+					</tr></thead>
+					<tbody>
+					<?php foreach ( $pending['records'] as $rec ) : ?>
+						<tr>
+							<td>TXT</td>
+							<td><code><?php echo esc_html( $rec['name'] ); ?></code></td>
+							<td><code style="word-break:break-all;"><?php echo esc_html( $rec['value'] ); ?></code></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<p>
+					<form method="post" action="<?php echo esc_url( $post ); ?>" style="display:inline;">
+						<input type="hidden" name="action" value="pressguard_ssl" />
+						<input type="hidden" name="do" value="continue_manual" />
+						<?php wp_nonce_field( 'pressguard_ssl' ); ?>
+						<?php submit_button( __( 'I added the records — Continue', 'pressguard' ), 'primary', 'submit', false ); ?>
+					</form>
+					<form method="post" action="<?php echo esc_url( $post ); ?>" style="display:inline;margin-inline-start:8px;">
+						<input type="hidden" name="action" value="pressguard_ssl" />
+						<input type="hidden" name="do" value="cancel_manual" />
+						<?php wp_nonce_field( 'pressguard_ssl' ); ?>
+						<?php submit_button( __( 'Cancel', 'pressguard' ), 'secondary', 'submit', false ); ?>
+					</form>
+				</p>
 			<?php endif; ?>
 
 			<div class="pressguard-cards">
@@ -422,10 +593,17 @@ final class Ssl implements Module {
 					<tr><th><?php esc_html_e( 'Method', 'pressguard' ); ?></th><td>
 						<select name="method">
 							<option value="http-01" <?php selected( (string) $config->get( 'ssl.acme.method', 'http-01' ), 'http-01' ); ?>>HTTP-01</option>
-							<option value="dns-01" <?php selected( (string) $config->get( 'ssl.acme.method', 'http-01' ), 'dns-01' ); ?>>DNS-01 (Cloudflare)</option>
+							<option value="dns-01" <?php selected( (string) $config->get( 'ssl.acme.method', 'http-01' ), 'dns-01' ); ?>>DNS-01 (wildcard / any CDN)</option>
+						</select>
+						<span class="description"><?php esc_html_e( 'HTTP-01 for a normal domain; DNS-01 for wildcards or behind a CDN.', 'pressguard' ); ?></span>
+					</td></tr>
+					<tr><th><?php esc_html_e( 'DNS-01 provider', 'pressguard' ); ?></th><td>
+						<select name="dns_provider">
+							<option value="manual" <?php selected( (string) $config->get( 'ssl.acme.dns_provider', 'manual' ), 'manual' ); ?>><?php esc_html_e( 'Manual (any provider — add TXT yourself)', 'pressguard' ); ?></option>
+							<option value="cloudflare" <?php selected( (string) $config->get( 'ssl.acme.dns_provider', 'manual' ), 'cloudflare' ); ?>><?php esc_html_e( 'Cloudflare (automatic)', 'pressguard' ); ?></option>
 						</select>
 					</td></tr>
-					<tr><th><?php esc_html_e( 'Cloudflare API token', 'pressguard' ); ?></th><td><input type="password" name="cf_token" class="regular-text" autocomplete="new-password" placeholder="<?php echo esc_attr( $config->get( 'ssl.cloudflare_token', '' ) ? '••••••••' : '' ); ?>" /> <span class="description"><?php esc_html_e( 'Only for DNS-01.', 'pressguard' ); ?></span></td></tr>
+					<tr><th><?php esc_html_e( 'Cloudflare API token', 'pressguard' ); ?></th><td><input type="password" name="cf_token" class="regular-text" autocomplete="new-password" placeholder="<?php echo esc_attr( $config->get( 'ssl.cloudflare_token', '' ) ? '••••••••' : '' ); ?>" /> <span class="description"><?php esc_html_e( 'Only for the Cloudflare automatic provider.', 'pressguard' ); ?></span></td></tr>
 					<tr><th><?php esc_html_e( 'Staging', 'pressguard' ); ?></th><td><label><input type="checkbox" name="staging" value="1" <?php checked( (bool) $config->get( 'ssl.acme.staging', false ) ); ?> /> <?php esc_html_e( 'Use the Let’s Encrypt staging environment (for testing)', 'pressguard' ); ?></label></td></tr>
 				</table>
 				<?php submit_button( __( 'Request certificate', 'pressguard' ), 'primary' ); ?>
