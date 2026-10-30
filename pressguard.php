@@ -3,7 +3,7 @@
  * Plugin Name:       PressGuard
  * Plugin URI:        https://github.com/babak-majd/PressGuard
  * Description:       Complete, free WordPress security — firewall, login protection, hardening, malware & security scanning, roles & activity, SSL and more. Nothing less than the big paid plugins, fully free.
- * Version:           0.1.0-dev
+ * Version:           0.1.0
  * Requires at least: 5.6
  * Requires PHP:      7.4
  * Author:            Babak Majd
@@ -23,7 +23,7 @@ if ( defined( 'PRESSGUARD_VERSION' ) ) {
 	return;
 }
 
-define( 'PRESSGUARD_VERSION', '0.1.0-dev' );
+define( 'PRESSGUARD_VERSION', '0.1.0' );
 define( 'PRESSGUARD_FILE', __FILE__ );
 define( 'PRESSGUARD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRESSGUARD_URL', plugin_dir_url( __FILE__ ) );

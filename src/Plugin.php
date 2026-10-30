@@ -141,6 +141,7 @@ final class Plugin {
 			\PressGuard\Core\Ssl\Ssl::class,
 			\PressGuard\Core\Integrations\Cloudflare\Cloudflare::class,
 			\PressGuard\Core\Alerts\Alerts::class,
+			\PressGuard\Core\Update\Updater::class,
 			\PressGuard\Admin\Admin::class,
 		);
 	}
