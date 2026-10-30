@@ -55,6 +55,9 @@ final class Admin implements Module {
 		}
 
 		( new Settings( $this->plugin ) )->register();
+		( new Expert( $this->plugin ) )->register();
+		( new ImportExport( $this->plugin ) )->register();
+		( new Wizard( $this->plugin ) )->register();
 
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );

@@ -36,6 +36,14 @@ final class RuleSet {
 	public static function load( Config $config ) {
 		$raw = self::read_definitions();
 
+		// Merge the user's own custom rules (stored in settings so no file write
+		// is needed on read-only plugin dirs).
+		foreach ( (array) $config->get( 'firewall.custom_rules', array() ) as $custom ) {
+			if ( is_array( $custom ) && ! empty( $custom['id'] ) && ! empty( $custom['pattern'] ) ) {
+				$raw[] = $custom;
+			}
+		}
+
 		$overrides = (array) $config->get( 'firewall.rule_overrides', array() );
 
 		$rules = array();
