@@ -26,6 +26,10 @@ final class Installer {
 
 		self::seed_defaults();
 
+		// Generate the Extended WAF snapshot so the prepend has data to read
+		// if/when the user installs it.
+		( new \PressGuard\Core\Firewall\Extended( \PressGuard\Plugin::instance() ) )->generate_snapshot();
+
 		if ( ! wp_next_scheduled( self::CRON_PURGE ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', self::CRON_PURGE );
 		}

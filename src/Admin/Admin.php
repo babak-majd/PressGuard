@@ -153,6 +153,11 @@ final class Admin implements Module {
 				'value' => $config->is_enabled( 'hardening' ) ? __( 'On', 'pressguard' ) : __( 'Off', 'pressguard' ),
 				'state' => $config->is_enabled( 'hardening' ) ? 'ok' : 'warn',
 			),
+			array(
+				'label' => __( 'Extended WAF', 'pressguard' ),
+				'value' => \PressGuard\Core\Firewall\Extended::is_active() ? __( 'Active (pre-WordPress)', 'pressguard' ) : __( 'Not installed', 'pressguard' ),
+				'state' => \PressGuard\Core\Firewall\Extended::is_active() ? 'ok' : 'warn',
+			),
 		);
 		?>
 		<div class="wrap pressguard-wrap">

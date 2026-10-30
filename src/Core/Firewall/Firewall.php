@@ -79,6 +79,11 @@ final class Firewall implements Module {
 			return;
 		}
 
+		// Extended WAF management (snapshot refresh + install toggle). Attach
+		// this regardless of SAPI so the snapshot stays fresh even when settings
+		// change via WP-CLI.
+		( new Extended( $this->plugin ) )->register();
+
 		// Never inspect CLI/cron; those are not attacker-controlled web input.
 		if ( ( defined( 'WP_CLI' ) && WP_CLI ) || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
 			return;
@@ -209,7 +214,11 @@ final class Firewall implements Module {
 		if ( ! empty( $_GET ) ) {
 			$values['query'] = Normalizer::flatten( wp_unslash( $_GET ) );
 		}
-		if ( ! empty( $_POST ) ) {
+		// Skip POST-body rules in a trusted admin context: an authenticated user
+		// editing content legitimately posts markup/code that would otherwise
+		// trip XSS/SQLi rules. Login state isn't loaded this early, so we use a
+		// cheap logged-in-cookie-on-admin-path heuristic (matches the prepend).
+		if ( ! empty( $_POST ) && ! $this->is_trusted_admin_context() ) {
 			$values['body'] = Normalizer::flatten( wp_unslash( $_POST ) );
 		}
 		if ( ! empty( $_COOKIE ) ) {
@@ -225,6 +234,32 @@ final class Firewall implements Module {
 		}
 
 		return $values;
+	}
+
+	/**
+	 * Whether this looks like an authenticated admin/editing request, where
+	 * POST-body rule matching should be skipped to avoid false positives.
+	 *
+	 * @return bool
+	 */
+	private function is_trusted_admin_context() {
+		$uri  = $this->request_uri();
+		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
+
+		$admin_path = ( false !== strpos( $path, '/wp-admin/' ) )
+			|| ( false !== strpos( $path, 'wp-login.php' ) )
+			|| ( false !== strpos( $path, '/wp-json/' ) );
+		if ( ! $admin_path ) {
+			return false;
+		}
+
+		foreach ( array_keys( $_COOKIE ) as $cookie_name ) {
+			if ( 0 === strpos( (string) $cookie_name, 'wordpress_logged_in' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

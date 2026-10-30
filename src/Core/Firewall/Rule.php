@@ -7,7 +7,8 @@
 
 namespace PressGuard\Core\Firewall;
 
-defined( 'ABSPATH' ) || exit;
+// Loadable both inside WordPress and from the pre-WordPress Extended WAF.
+defined( 'ABSPATH' ) || defined( 'PRESSGUARD_WAF' ) || exit;
 
 /**
  * Immutable value object for one detection rule. Rules add an anomaly score

@@ -61,6 +61,7 @@ final class Settings {
 					array( 'key' => 'firewall.ua.block_empty', 'type' => 'checkbox', 'label' => __( 'Block empty User-Agents', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'firewall.under_attack.manual', 'type' => 'checkbox', 'label' => __( 'Under Attack mode (manual)', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'firewall.under_attack.auto', 'type' => 'checkbox', 'label' => __( 'Auto Under Attack on detected surge', 'pressguard' ), 'default' => true ),
+					array( 'key' => 'firewall.extended.enabled', 'type' => 'checkbox', 'label' => __( 'Extended WAF (run before WordPress via auto_prepend_file)', 'pressguard' ), 'default' => false ),
 				),
 			),
 			'login'     => array(

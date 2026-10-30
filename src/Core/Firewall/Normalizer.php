@@ -7,7 +7,9 @@
 
 namespace PressGuard\Core\Firewall;
 
-defined( 'ABSPATH' ) || exit;
+// Loadable both inside WordPress and from the pre-WordPress Extended WAF
+// (prepend.php defines PRESSGUARD_WAF); still blocks direct web access.
+defined( 'ABSPATH' ) || defined( 'PRESSGUARD_WAF' ) || exit;
 
 /**
  * Normalizes request values before rule matching. Most WAF evasion hides in
