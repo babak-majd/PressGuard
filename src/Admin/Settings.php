@@ -62,6 +62,10 @@ final class Settings {
 					array( 'key' => 'firewall.under_attack.manual', 'type' => 'checkbox', 'label' => __( 'Under Attack mode (manual)', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'firewall.under_attack.auto', 'type' => 'checkbox', 'label' => __( 'Auto Under Attack on detected surge', 'pressguard' ), 'default' => true ),
 					array( 'key' => 'firewall.extended.enabled', 'type' => 'checkbox', 'label' => __( 'Extended WAF (run before WordPress via auto_prepend_file)', 'pressguard' ), 'default' => false ),
+					array( 'key' => 'geo.enabled', 'type' => 'checkbox', 'label' => __( 'Country blocking', 'pressguard' ), 'default' => false ),
+					array( 'key' => 'geo.mode', 'type' => 'select', 'label' => __( 'Country mode', 'pressguard' ), 'options' => array( 'block' => __( 'Block listed countries', 'pressguard' ), 'allow' => __( 'Allow only listed countries', 'pressguard' ) ), 'default' => 'block' ),
+					array( 'key' => 'geo.countries', 'type' => 'csv', 'label' => __( 'Country codes (e.g. RU, CN, KP)', 'pressguard' ), 'default' => array() ),
+					array( 'key' => 'geo.http_lookup', 'type' => 'checkbox', 'label' => __( 'Use external geolocation lookup (no local GeoIP DB)', 'pressguard' ), 'default' => false ),
 				),
 			),
 			'login'     => array(
@@ -75,6 +79,8 @@ final class Settings {
 					array( 'key' => 'login.custom_url.enabled', 'type' => 'checkbox', 'label' => __( 'Custom login URL', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'login.custom_url.slug', 'type' => 'text', 'label' => __( 'Login slug', 'pressguard' ), 'default' => $this->default_login_slug() ),
 					array( 'key' => 'login.generic_errors', 'type' => 'checkbox', 'label' => __( 'Generic login errors', 'pressguard' ), 'default' => true ),
+					array( 'key' => 'login.breached.enabled', 'type' => 'checkbox', 'label' => __( 'Breached-password screening (HaveIBeenPwned)', 'pressguard' ), 'default' => false ),
+					array( 'key' => 'login.breached.block_login', 'type' => 'checkbox', 'label' => __( 'Block login when the password is breached', 'pressguard' ), 'default' => false ),
 				),
 			),
 			'hardening' => array(
@@ -220,6 +226,10 @@ final class Settings {
 			case 'number':
 				printf( '<input type="number" name="%s" value="%s" class="small-text" />', $name, esc_attr( (string) $value ) );
 				break;
+			case 'csv':
+				$joined = is_array( $value ) ? implode( ', ', $value ) : (string) $value;
+				printf( '<input type="text" name="%s" value="%s" class="regular-text" />', $name, esc_attr( $joined ) );
+				break;
 			case 'select':
 				echo '<select name="' . $name . '">';
 				foreach ( $field['options'] as $opt_val => $opt_label ) {
@@ -275,6 +285,11 @@ final class Settings {
 						$raw = sanitize_title( $raw );
 					}
 					$config->set( $key, $raw );
+					break;
+				case 'csv':
+					$raw   = isset( $data[ $key ] ) ? sanitize_text_field( $data[ $key ] ) : '';
+					$items = array_filter( array_map( 'trim', explode( ',', $raw ) ) );
+					$config->set( $key, array_values( $items ) );
 					break;
 			}
 		}

@@ -137,6 +137,15 @@ final class Firewall implements Module {
 			}
 		}
 
+		// Country policy (GeoIP) — cached per IP, only when enabled.
+		if ( ( new Geo( $config ) )->is_blocked( $ip ) ) {
+			$this->anomaly->record_hit( 'geo' );
+			if ( 'enabled' === $mode ) {
+				$this->block( $ip, array(), 0, 'country' );
+				return;
+			}
+		}
+
 		// Per-IP rate limiting.
 		if ( $this->rate_limited( $ip ) ) {
 			$this->anomaly->record_hit( 'rate' );

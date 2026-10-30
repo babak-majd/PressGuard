@@ -70,6 +70,18 @@ final class Logger {
 			array( '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s' )
 		);
 
+		if ( $result ) {
+			/**
+			 * Fires after an event is recorded, so modules (e.g. Alerts) can react.
+			 *
+			 * @param string $module   Module id.
+			 * @param string $type     Event type.
+			 * @param int    $severity Severity level.
+			 * @param array  $args     Full event args (message, ip, user_id, context).
+			 */
+			do_action( 'pressguard_event_logged', $module, $type, $severity, $args );
+		}
+
 		return $result ? (int) $wpdb->insert_id : false;
 	}
 }

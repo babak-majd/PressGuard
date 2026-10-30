@@ -66,6 +66,10 @@ final class Login implements Module {
 			( new TwoFactor( $this->plugin ) )->register();
 		}
 
+		if ( (bool) $config->get( 'login.breached.enabled', false ) ) {
+			( new BreachedPassword( $this->plugin ) )->register();
+		}
+
 		$slug = (string) $config->get( 'login.custom_url.slug', '' );
 		if ( (bool) $config->get( 'login.custom_url.enabled', false ) && '' !== $slug ) {
 			( new LoginUrl( $slug ) )->register();
