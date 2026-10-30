@@ -1,0 +1,72 @@
+/* PressGuard admin styles — intentionally light, leaning on native wp-admin. */
+
+.pressguard-cards {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin: 20px 0;
+}
+
+.pressguard-card {
+	flex: 1 1 180px;
+	min-width: 160px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-left-width: 4px;
+	border-radius: 4px;
+	padding: 14px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.pressguard-card--ok {
+	border-left-color: #00a32a;
+}
+
+.pressguard-card--warn {
+	border-left-color: #dba617;
+}
+
+.pressguard-card__label {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+	color: #646970;
+}
+
+.pressguard-card__value {
+	font-size: 20px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.pressguard-coffee {
+	margin-top: 24px;
+}
+
+/* Dark-mode-friendly surfaces follow the admin scheme where available. */
+@media ( prefers-color-scheme: dark ) {
+	.pressguard-card {
+		background: #1d2327;
+		border-color: #3c434a;
+	}
+
+	.pressguard-card__value {
+		color: #f0f0f1;
+	}
+}
+
+/* RTL tweak: the colored accent moves to the right edge. */
+.rtl .pressguard-card {
+	border-left-width: 1px;
+	border-right-width: 4px;
+}
+
+.rtl .pressguard-card--ok {
+	border-right-color: #00a32a;
+}
+
+.rtl .pressguard-card--warn {
+	border-right-color: #dba617;
+}

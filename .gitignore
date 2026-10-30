@@ -1,0 +1,24 @@
+# Dependencies / build
+/vendor/
+/node_modules/
+composer.lock
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# AI assistants / agents / skills — keep these out of the repo
+CLAUDE.md
+AGENTS.md
+.claude/
+.cursor/
+.cursorrules
+.aider*
+.github/copilot-instructions.md
+**/SKILL.md
+*.skill
+.ai/

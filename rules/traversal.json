@@ -1,0 +1,26 @@
+[
+	{
+		"id": "lfi-path-traversal",
+		"category": "traversal",
+		"pattern": "(\\.\\./|\\.\\.\\\\){2,}",
+		"score": 5,
+		"targets": ["uri", "query", "body"],
+		"description": "Directory traversal sequence"
+	},
+	{
+		"id": "lfi-sensitive-file",
+		"category": "traversal",
+		"pattern": "(/etc/passwd|/etc/shadow|/proc/self/environ|boot\\.ini|win\\.ini)\\b",
+		"score": 5,
+		"targets": ["uri", "query", "body"],
+		"description": "Access attempt to a sensitive system file"
+	},
+	{
+		"id": "lfi-php-wrapper",
+		"category": "traversal",
+		"pattern": "(php://(filter|input|data)|data://text|expect://|phar://)",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "PHP stream wrapper used for LFI/RCE"
+	}
+]

@@ -1,0 +1,42 @@
+[
+	{
+		"id": "sqli-union-select",
+		"category": "sqli",
+		"pattern": "union[\\s/*]+(all[\\s/*]+)?select[\\s(]",
+		"score": 5,
+		"targets": ["uri", "query", "body"],
+		"description": "SQL UNION SELECT injection"
+	},
+	{
+		"id": "sqli-boolean",
+		"category": "sqli",
+		"pattern": "(\\bor\\b|\\band\\b)[\\s(]+['\"]?\\d+['\"]?\\s*(=|<|>)\\s*['\"]?\\d+",
+		"score": 4,
+		"targets": ["query", "body"],
+		"description": "Boolean-based SQL injection (e.g. OR 1=1)"
+	},
+	{
+		"id": "sqli-comment",
+		"category": "sqli",
+		"pattern": "(/\\*!?|--[\\s-]|#)\\s*(select|union|drop|insert|update|delete)\\b",
+		"score": 4,
+		"targets": ["uri", "query", "body"],
+		"description": "SQL comment used to smuggle a keyword"
+	},
+	{
+		"id": "sqli-timing",
+		"category": "sqli",
+		"pattern": "\\b(sleep|benchmark|pg_sleep|waitfor[\\s]+delay)\\s*\\(",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "Time-based blind SQL injection"
+	},
+	{
+		"id": "sqli-infoschema",
+		"category": "sqli",
+		"pattern": "\\b(information_schema|group_concat|load_file|into[\\s]+outfile)\\b",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "Schema enumeration / file access via SQL"
+	}
+]

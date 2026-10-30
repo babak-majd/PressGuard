@@ -1,0 +1,34 @@
+[
+	{
+		"id": "rce-php-eval",
+		"category": "rce",
+		"pattern": "\\b(eval|assert|create_function|call_user_func(_array)?)\\s*\\(",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "PHP dynamic code execution sink"
+	},
+	{
+		"id": "rce-php-obfuscation",
+		"category": "rce",
+		"pattern": "\\b(base64_decode|gzinflate|gzuncompress|str_rot13)\\s*\\(\\s*(\\$|['\"])",
+		"score": 4,
+		"targets": ["body"],
+		"description": "Obfuscated-payload decoder chain"
+	},
+	{
+		"id": "rce-system-exec",
+		"category": "rce",
+		"pattern": "\\b(system|exec|shell_exec|passthru|popen|proc_open)\\s*\\(",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "OS command execution function"
+	},
+	{
+		"id": "rce-shell-metachars",
+		"category": "rce",
+		"pattern": ";\\s*(cat|wget|curl|chmod|rm|nc|bash|sh)\\s+/?",
+		"score": 4,
+		"targets": ["query", "body"],
+		"description": "Shell command chaining"
+	}
+]

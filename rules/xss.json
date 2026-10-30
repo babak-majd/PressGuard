@@ -1,0 +1,42 @@
+[
+	{
+		"id": "xss-script-tag",
+		"category": "xss",
+		"pattern": "<script[\\s/>]",
+		"score": 5,
+		"targets": ["uri", "query", "body", "referer"],
+		"description": "Inline <script> tag"
+	},
+	{
+		"id": "xss-event-handler",
+		"category": "xss",
+		"pattern": "<[a-z][^>]*\\son(error|load|click|mouseover|focus|toggle)\\s*=",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "HTML element with an inline event handler"
+	},
+	{
+		"id": "xss-js-uri",
+		"category": "xss",
+		"pattern": "(javascript|vbscript|data)\\s*:[^\\s]*(alert|eval|document|window|base64)",
+		"score": 4,
+		"targets": ["query", "body"],
+		"description": "javascript:/data: URI payload"
+	},
+	{
+		"id": "xss-svg-onload",
+		"category": "xss",
+		"pattern": "<svg[^>]*\\son[a-z]+\\s*=",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "SVG-based XSS vector"
+	},
+	{
+		"id": "xss-img-onerror",
+		"category": "xss",
+		"pattern": "<img[^>]+onerror\\s*=",
+		"score": 5,
+		"targets": ["query", "body"],
+		"description": "img onerror XSS vector"
+	}
+]
