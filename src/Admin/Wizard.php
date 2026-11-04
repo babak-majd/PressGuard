@@ -116,7 +116,14 @@ final class Wizard {
 
 		$c->set( 'activity.enabled', true );
 
-		$this->plugin->logger()->log( 'wizard', 'applied', array( 'severity' => 2, 'message' => 'Recommended baseline applied via setup wizard.' ) );
+		$this->plugin->logger()->log(
+			'wizard',
+			'applied',
+			array(
+				'severity' => 2,
+				'message'  => 'Recommended baseline applied via setup wizard.',
+			)
+		);
 	}
 
 	/**

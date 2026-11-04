@@ -168,9 +168,9 @@ final class Activity implements Module {
 	/**
 	 * Log publish/unpublish transitions (ignore autosaves/no-ops).
 	 *
-	 * @param string    $new New status.
-	 * @param string    $old Old status.
-	 * @param \WP_Post  $post Post.
+	 * @param string   $new New status.
+	 * @param string   $old Old status.
+	 * @param \WP_Post $post Post.
 	 */
 	public function on_post_status( $new, $old, $post ) {
 		if ( $new === $old || 'auto-draft' === $new || wp_is_post_revision( $post ) ) {

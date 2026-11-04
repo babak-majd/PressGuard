@@ -145,7 +145,14 @@ final class Access implements Module {
 		}
 		add_role( $slug, $name, $caps );
 
-		$this->plugin->logger()->log( 'access', 'role_created', array( 'severity' => 3, 'message' => sprintf( 'Role "%s" created.', $slug ) ) );
+		$this->plugin->logger()->log(
+			'access',
+			'role_created',
+			array(
+				'severity' => 3,
+				'message'  => sprintf( 'Role "%s" created.', $slug ),
+			)
+		);
 	}
 
 	/**
@@ -170,14 +177,21 @@ final class Access implements Module {
 			}
 		}
 
-		$this->plugin->logger()->log( 'access', 'caps_updated', array( 'severity' => 3, 'message' => sprintf( 'Capabilities updated for "%s".', $slug ) ) );
+		$this->plugin->logger()->log(
+			'access',
+			'caps_updated',
+			array(
+				'severity' => 3,
+				'message'  => sprintf( 'Capabilities updated for "%s".', $slug ),
+			)
+		);
 	}
 
 	/**
 	 * Delete a custom role, reassigning its users to subscriber.
 	 */
 	private function delete_role() {
-		$slug = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : '';
+		$slug      = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : '';
 		$protected = array( 'administrator', 'editor', 'author', 'contributor', 'subscriber' );
 		if ( '' === $slug || in_array( $slug, $protected, true ) || ! get_role( $slug ) ) {
 			return;
@@ -188,7 +202,14 @@ final class Access implements Module {
 		}
 		remove_role( $slug );
 
-		$this->plugin->logger()->log( 'access', 'role_deleted', array( 'severity' => 3, 'message' => sprintf( 'Role "%s" deleted.', $slug ) ) );
+		$this->plugin->logger()->log(
+			'access',
+			'role_deleted',
+			array(
+				'severity' => 3,
+				'message'  => sprintf( 'Role "%s" deleted.', $slug ),
+			)
+		);
 	}
 
 	/**
@@ -201,7 +222,7 @@ final class Access implements Module {
 
 		$map = array();
 		foreach ( $input as $file => $roles ) {
-			$file = sanitize_text_field( $file );
+			$file         = sanitize_text_field( $file );
 			$map[ $file ] = array_map( 'sanitize_key', (array) $roles );
 		}
 		$this->plugin->config()->set( 'access.plugin_roles', $map );
@@ -231,8 +252,8 @@ final class Access implements Module {
 			return;
 		}
 
-		$roles   = wp_roles();
-		$editing = isset( $_GET['role'] ) ? sanitize_key( wp_unslash( $_GET['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$roles    = wp_roles();
+		$editing  = isset( $_GET['role'] ) ? sanitize_key( wp_unslash( $_GET['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$post_url = admin_url( 'admin-post.php' );
 		?>
 		<div class="wrap pressguard-wrap">

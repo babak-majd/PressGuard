@@ -142,9 +142,9 @@ final class Admin implements Module {
 
 		$cards = array(
 			array(
-				'label'  => __( 'Firewall', 'pressguard' ),
-				'value'  => $this->firewall_mode_label( $firewall ),
-				'state'  => 'enabled' === $firewall ? 'ok' : 'warn',
+				'label' => __( 'Firewall', 'pressguard' ),
+				'value' => $this->firewall_mode_label( $firewall ),
+				'state' => 'enabled' === $firewall ? 'ok' : 'warn',
 			),
 			array(
 				'label' => __( 'Login protection', 'pressguard' ),

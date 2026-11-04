@@ -115,7 +115,7 @@ define( 'PRESSGUARD_WAF', true );
 
 	$values = array(
 		'uri'     => array( \PressGuard\Core\Firewall\Normalizer::canonicalize( $uri ) ),
-		'query'   => isset( $_GET ) ? \PressGuard\Core\Firewall\Normalizer::flatten( $_GET ) : array(),
+		'query'   => ! empty( $_GET ) ? \PressGuard\Core\Firewall\Normalizer::flatten( $_GET ) : array(),
 		'ua'      => array( \PressGuard\Core\Firewall\Normalizer::canonicalize( $ua ) ),
 	);
 	if ( ! $is_admin_path && ! empty( $_POST ) ) {

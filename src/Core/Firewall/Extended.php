@@ -253,11 +253,11 @@ final class Extended {
 	 * @return bool
 	 */
 	private function write_user_ini( $remove = false ) {
-		$file   = ABSPATH . '.user.ini';
-		$begin  = '; BEGIN ' . self::MARKER;
-		$end    = '; END ' . self::MARKER;
-		$path   = self::prepend_path();
-		$block  = $begin . "\nauto_prepend_file=\"" . $path . "\"\n" . $end . "\n";
+		$file  = ABSPATH . '.user.ini';
+		$begin = '; BEGIN ' . self::MARKER;
+		$end   = '; END ' . self::MARKER;
+		$path  = self::prepend_path();
+		$block = $begin . "\nauto_prepend_file=\"" . $path . "\"\n" . $end . "\n";
 
 		$current = file_exists( $file ) ? (string) @file_get_contents( $file ) : ''; // phpcs:ignore
 

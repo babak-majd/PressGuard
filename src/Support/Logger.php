@@ -16,26 +16,20 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Logger {
 
-	const SEVERITY_DEBUG   = 1;
-	const SEVERITY_NOTICE  = 2;
-	const SEVERITY_WARNING = 3;
-	const SEVERITY_ERROR   = 4;
+	const SEVERITY_DEBUG    = 1;
+	const SEVERITY_NOTICE   = 2;
+	const SEVERITY_WARNING  = 3;
+	const SEVERITY_ERROR    = 4;
 	const SEVERITY_CRITICAL = 5;
 
 	/**
-	 * Config service.
-	 *
-	 * @var Config
-	 */
-	private $config;
-
-	/**
-	 * Constructor.
+	 * Constructor. Config is accepted for forward-compatibility (e.g. future
+	 * per-module log levels) but not currently retained.
 	 *
 	 * @param Config $config Config service.
 	 */
 	public function __construct( Config $config ) {
-		$this->config = $config;
+		unset( $config );
 	}
 
 	/**

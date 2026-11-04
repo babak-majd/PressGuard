@@ -70,7 +70,7 @@ final class LoginUrl {
 	 * Return 404 for direct, unauthenticated hits on wp-login.php.
 	 */
 	public function block_default_login() {
-		$path = $this->request_path();
+		$path          = $this->request_path();
 		$is_login_file = ( 'wp-login.php' === $path )
 			|| ( isset( $_SERVER['SCRIPT_NAME'] ) && false !== strpos( (string) wp_unslash( $_SERVER['SCRIPT_NAME'] ), 'wp-login.php' ) );
 

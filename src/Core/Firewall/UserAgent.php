@@ -83,11 +83,11 @@ final class UserAgent {
 		}
 
 		$map = array(
-			'googlebot'    => array( '.googlebot.com', '.google.com' ),
-			'bingbot'      => array( '.search.msn.com' ),
-			'applebot'     => array( '.applebot.apple.com' ),
-			'duckduckbot'  => array( '.duckduckgo.com' ),
-			'yandex'       => array( '.yandex.com', '.yandex.net', '.yandex.ru' ),
+			'googlebot'   => array( '.googlebot.com', '.google.com' ),
+			'bingbot'     => array( '.search.msn.com' ),
+			'applebot'    => array( '.applebot.apple.com' ),
+			'duckduckbot' => array( '.duckduckgo.com' ),
+			'yandex'      => array( '.yandex.com', '.yandex.net', '.yandex.ru' ),
 		);
 
 		$suffixes = array();

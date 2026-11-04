@@ -212,11 +212,26 @@ final class Compatibility implements Module {
 	private function detected() {
 		$cache = defined( 'WP_ROCKET_VERSION' ) || defined( 'W3TC' ) || defined( 'LSCWP_V' ) || defined( 'WPCACHEHOME' ) || function_exists( 'wp_cache_is_enabled' );
 		return array(
-			'woocommerce' => array( 'label' => 'WooCommerce', 'active' => class_exists( 'WooCommerce' ) ),
-			'elementor'   => array( 'label' => 'Elementor', 'active' => defined( 'ELEMENTOR_VERSION' ) ),
-			'gutenberg'   => array( 'label' => 'Gutenberg / Block editor', 'active' => true ),
-			'presspilot'  => array( 'label' => 'PressPilot', 'active' => defined( 'PRESSPILOT_VERSION' ) || in_array( 'presspilot/presspilot.php', (array) get_option( 'active_plugins', array() ), true ) ),
-			'cache'       => array( 'label' => __( 'Page cache plugin', 'pressguard' ), 'active' => (bool) $cache ),
+			'woocommerce' => array(
+				'label'  => 'WooCommerce',
+				'active' => class_exists( 'WooCommerce' ),
+			),
+			'elementor'   => array(
+				'label'  => 'Elementor',
+				'active' => defined( 'ELEMENTOR_VERSION' ),
+			),
+			'gutenberg'   => array(
+				'label'  => 'Gutenberg / Block editor',
+				'active' => true,
+			),
+			'presspilot'  => array(
+				'label'  => 'PressPilot',
+				'active' => defined( 'PRESSPILOT_VERSION' ) || in_array( 'presspilot/presspilot.php', (array) get_option( 'active_plugins', array() ), true ),
+			),
+			'cache'       => array(
+				'label'  => __( 'Page cache plugin', 'pressguard' ),
+				'active' => (bool) $cache,
+			),
 		);
 	}
 

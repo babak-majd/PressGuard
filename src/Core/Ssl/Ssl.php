@@ -227,10 +227,16 @@ final class Ssl implements Module {
 	 */
 	public function issue( array $domains, $email, $method, $staging ) {
 		if ( empty( $domains ) || '' === $email ) {
-			return array( 'ok' => false, 'message' => 'Domains and email are required.' );
+			return array(
+				'ok'      => false,
+				'message' => 'Domains and email are required.',
+			);
 		}
 		if ( ! function_exists( 'openssl_pkey_new' ) ) {
-			return array( 'ok' => false, 'message' => 'OpenSSL is not available on this host.' );
+			return array(
+				'ok'      => false,
+				'message' => 'OpenSSL is not available on this host.',
+			);
 		}
 
 		$config = $this->plugin->config();
@@ -258,7 +264,10 @@ final class Ssl implements Module {
 				$status = $acme->poll_authorization( $authz_url );
 				if ( 'valid' !== $status ) {
 					$this->cleanup( $method, $authz, $cf_cleanup );
-					return array( 'ok' => false, 'message' => 'Challenge failed (' . $status . ') for ' . ( $authz['identifier']['value'] ?? '' ) );
+					return array(
+						'ok'      => false,
+						'message' => 'Challenge failed (' . $status . ') for ' . ( $authz['identifier']['value'] ?? '' ),
+					);
 				}
 			}
 
@@ -270,11 +279,24 @@ final class Ssl implements Module {
 			$config->set( 'ssl.cert.issued', time() );
 			$config->set( 'ssl.cert.expires', $this->cert_expiry( $chain ) );
 
-			$this->plugin->logger()->log( 'ssl', 'cert_issued', array( 'severity' => 2, 'message' => 'Certificate issued for ' . implode( ', ', $domains ) ) );
+			$this->plugin->logger()->log(
+				'ssl',
+				'cert_issued',
+				array(
+					'severity' => 2,
+					'message'  => 'Certificate issued for ' . implode( ', ', $domains ),
+				)
+			);
 
-			return array( 'ok' => true, 'message' => 'Certificate issued. Install it or follow the guidance below.' );
+			return array(
+				'ok'      => true,
+				'message' => 'Certificate issued. Install it or follow the guidance below.',
+			);
 		} catch ( \Throwable $e ) {
-			return array( 'ok' => false, 'message' => $e->getMessage() );
+			return array(
+				'ok'      => false,
+				'message' => $e->getMessage(),
+			);
 		}
 	}
 
@@ -290,7 +312,10 @@ final class Ssl implements Module {
 	 */
 	public function start_manual_dns( array $domains, $email, $staging ) {
 		if ( empty( $domains ) || '' === $email ) {
-			return array( 'ok' => false, 'message' => 'Domains and email are required.' );
+			return array(
+				'ok'      => false,
+				'message' => 'Domains and email are required.',
+			);
 		}
 		$config = $this->plugin->config();
 		$dir    = $staging ? 'https://acme-staging-v02.api.letsencrypt.org/directory' : 'https://acme-v02.api.letsencrypt.org/directory';
@@ -302,7 +327,7 @@ final class Ssl implements Module {
 		}
 
 		try {
-			$acme    = new Acme( $account_key, $dir );
+			$acme = new Acme( $account_key, $dir );
 			$acme->register_account( $email );
 			$ordered = $acme->new_order( $domains );
 			$order   = $ordered['order'];
@@ -318,7 +343,10 @@ final class Ssl implements Module {
 					}
 				}
 				if ( ! $chal ) {
-					return array( 'ok' => false, 'message' => 'No DNS-01 challenge offered.' );
+					return array(
+						'ok'      => false,
+						'message' => 'No DNS-01 challenge offered.',
+					);
 				}
 				$domain    = $authz['identifier']['value'] ?? '';
 				$records[] = array(
@@ -333,18 +361,24 @@ final class Ssl implements Module {
 			$config->set(
 				'ssl.pending',
 				array(
-					'dir'       => $dir,
-					'order'     => $order,
-					'domains'   => array_values( $domains ),
-					'email'     => $email,
-					'records'   => $records,
-					'created'   => time(),
+					'dir'     => $dir,
+					'order'   => $order,
+					'domains' => array_values( $domains ),
+					'email'   => $email,
+					'records' => $records,
+					'created' => time(),
 				)
 			);
 
-			return array( 'ok' => true, 'message' => 'Add the TXT records below, then click Continue.' );
+			return array(
+				'ok'      => true,
+				'message' => 'Add the TXT records below, then click Continue.',
+			);
 		} catch ( \Throwable $e ) {
-			return array( 'ok' => false, 'message' => $e->getMessage() );
+			return array(
+				'ok'      => false,
+				'message' => $e->getMessage(),
+			);
 		}
 	}
 
@@ -358,7 +392,10 @@ final class Ssl implements Module {
 		$config  = $this->plugin->config();
 		$pending = (array) $config->get( 'ssl.pending', array() );
 		if ( empty( $pending['records'] ) ) {
-			return array( 'ok' => false, 'message' => 'No pending certificate request.' );
+			return array(
+				'ok'      => false,
+				'message' => 'No pending certificate request.',
+			);
 		}
 
 		$account_key = Crypto::decrypt( (string) $config->get( 'ssl.acme.account_key', '' ) );
@@ -371,7 +408,10 @@ final class Ssl implements Module {
 			}
 			foreach ( $pending['records'] as $rec ) {
 				if ( 'valid' !== $acme->poll_authorization( $rec['authz_url'] ) ) {
-					return array( 'ok' => false, 'message' => 'DNS validation failed for ' . $rec['domain'] . '. Check the TXT record.' );
+					return array(
+						'ok'      => false,
+						'message' => 'DNS validation failed for ' . $rec['domain'] . '. Check the TXT record.',
+					);
 				}
 			}
 
@@ -384,11 +424,24 @@ final class Ssl implements Module {
 			$config->set( 'ssl.cert.expires', $this->cert_expiry( $chain ) );
 			$config->set( 'ssl.pending', array() );
 
-			$this->plugin->logger()->log( 'ssl', 'cert_issued', array( 'severity' => 2, 'message' => 'Certificate issued (manual DNS) for ' . implode( ', ', $pending['domains'] ) ) );
+			$this->plugin->logger()->log(
+				'ssl',
+				'cert_issued',
+				array(
+					'severity' => 2,
+					'message'  => 'Certificate issued (manual DNS) for ' . implode( ', ', $pending['domains'] ),
+				)
+			);
 
-			return array( 'ok' => true, 'message' => 'Certificate issued.' );
+			return array(
+				'ok'      => true,
+				'message' => 'Certificate issued.',
+			);
 		} catch ( \Throwable $e ) {
-			return array( 'ok' => false, 'message' => $e->getMessage() );
+			return array(
+				'ok'      => false,
+				'message' => $e->getMessage(),
+			);
 		}
 	}
 
@@ -401,7 +454,7 @@ final class Ssl implements Module {
 	 * @param array  $cf_cleanup Collected Cloudflare records to remove later.
 	 */
 	private function solve_challenge( Acme $acme, $authz, $method, &$cf_cleanup ) {
-		$want = ( 'dns-01' === $method ) ? 'dns-01' : 'http-01';
+		$want      = ( 'dns-01' === $method ) ? 'dns-01' : 'http-01';
 		$challenge = null;
 		foreach ( (array) $authz['challenges'] as $c ) {
 			if ( ( $c['type'] ?? '' ) === $want ) {
@@ -424,8 +477,8 @@ final class Ssl implements Module {
 			if ( '' === $cf_token ) {
 				throw new \RuntimeException( 'DNS-01 requires a Cloudflare API token.' );
 			}
-			$cf  = new CloudflareDns( $cf_token );
-			$rec = $cf->add_txt( '_acme-challenge.' . ltrim( $domain, '*.' ), $token_val );
+			$cf           = new CloudflareDns( $cf_token );
+			$rec          = $cf->add_txt( '_acme-challenge.' . ltrim( $domain, '*.' ), $token_val );
 			$cf_cleanup[] = $rec;
 			sleep( 10 ); // Allow propagation.
 		}

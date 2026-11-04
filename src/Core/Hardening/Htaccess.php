@@ -51,7 +51,7 @@ final class Htaccess {
 	 */
 	public function block_uploads_php( $enable ) {
 		$uploads = wp_upload_dir();
-		$dir     = isset( $uploads['basedir'] ) ? $uploads['basedir'] : WP_CONTENT_DIR . '/uploads';
+		$dir     = ! empty( $uploads['basedir'] ) ? $uploads['basedir'] : WP_CONTENT_DIR . '/uploads';
 		if ( ! wp_mkdir_p( $dir ) ) {
 			return false;
 		}

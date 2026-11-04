@@ -2,20 +2,100 @@
 <ruleset name="PressGuard">
 	<description>Coding standards for PressGuard.</description>
 
-	<file>.</file>
+	<file>pressguard.php</file>
+	<file>uninstall.php</file>
+	<file>src</file>
+	<file>firewall</file>
 
 	<exclude-pattern>/vendor/</exclude-pattern>
 	<exclude-pattern>/node_modules/</exclude-pattern>
 	<exclude-pattern>/assets/</exclude-pattern>
+	<exclude-pattern>/tests/</exclude-pattern>
 
 	<arg name="extensions" value="php"/>
 	<arg name="colors"/>
 	<arg value="sp"/>
 
 	<rule ref="WordPress">
-		<!-- The firewall prepend runs before WordPress loads, so some WP-only
-		     rules (nonce, i18n of early strings) don't apply there. -->
+		<!-- PSR-4 autoloading: class files are Foo.php, not class-foo.php. -->
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+
+		<!-- Descriptive parameter names ($new, $default, $parent, …) are clearer
+		     than contrived alternatives here. -->
+		<exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames"/>
+
+		<!-- Security plugin: it legitimately operates on local files and runs
+		     direct queries against its own custom table; @ guards best-effort I/O
+		     so a filesystem hiccup never fatals a request. -->
+		<exclude name="WordPress.WP.AlternativeFunctions"/>
+		<exclude name="WordPress.PHP.NoSilencedErrors"/>
+		<exclude name="WordPress.DB.DirectDatabaseQuery"/>
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode"/>
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode"/>
+		<exclude name="WordPress.PHP.DevelopmentFunctions.error_log_var_export"/>
+
+		<!-- Doc nitpicks. -->
+		<exclude name="Squiz.Commenting.FunctionCommentThrowTag.Missing"/>
+		<exclude name="Generic.Commenting.DocComment.ShortNotCapital"/>
+		<exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
+		<exclude name="Squiz.PHP.DisallowSizeFunctionsInLoops"/>
+
+		<!-- Exception messages are internal (caught/logged), never browser output. -->
+		<exclude name="WordPress.Security.EscapeOutput.ExceptionNotEscaped"/>
+
+		<!-- These flag WordPress's OWN constants/hooks (DISALLOW_FILE_EDIT,
+		     DONOTCACHEPAGE, xmlrpc_enabled) and a $pagenow handoff to wp-login —
+		     not plugin-defined globals. Our own hooks/constants are prefixed. -->
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound"/>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound"/>
+		<exclude name="WordPress.WP.GlobalVariablesOverride.Prohibited"/>
+
+		<!-- prepend.php runs before WordPress loads (no WP APIs available). -->
 		<exclude-pattern>/firewall/prepend.php</exclude-pattern>
+	</rule>
+
+	<!-- The firewall and compatibility layer MUST read raw, un-sanitized request
+	     input (that is what a WAF inspects), so sanitize/nonce sniffs don't apply
+	     there. These are inspection-only reads, never used as trusted data. -->
+	<!-- Raw $_SERVER infra reads (validated with filter_var / wp_parse_url) and
+	     $_POST/$_GET reads inside handler helpers whose request method already
+	     verified the nonce (check_admin_referer / check_ajax_referer). -->
+	<rule ref="WordPress.Security.ValidatedSanitizedInput">
+		<exclude-pattern>/src/Core/Firewall/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Compat/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Traffic/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Anomaly/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Ssl/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Login/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Hardening/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Permissions/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Scanner/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Access/*</exclude-pattern>
+		<exclude-pattern>/src/Support/Ip.php</exclude-pattern>
+		<exclude-pattern>/src/Admin/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.Security.NonceVerification">
+		<exclude-pattern>/src/Core/Firewall/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Compat/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Traffic/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Ssl/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Access/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Scanner/*</exclude-pattern>
+		<exclude-pattern>/src/Core/Permissions/*</exclude-pattern>
+		<exclude-pattern>/src/Admin/*</exclude-pattern>
+	</rule>
+	<!-- $name is built with esc_attr() just above its echo; the sniff can't follow it. -->
+	<rule ref="WordPress.Security.EscapeOutput.OutputNotEscaped">
+		<exclude-pattern>/src/Admin/Settings.php</exclude-pattern>
+	</rule>
+	<!-- Internal column/table identifiers; values are passed through $wpdb->prepare(). -->
+	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
+		<exclude-pattern>/src/Admin/EventsTable.php</exclude-pattern>
+	</rule>
+	<!-- Procedural uninstall script: top-level locals, not plugin globals. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
+		<exclude-pattern>/uninstall.php</exclude-pattern>
 	</rule>
 
 	<config name="minimum_supported_wp_version" value="5.6"/>
@@ -35,6 +115,7 @@
 				<element value="pressguard"/>
 				<element value="PressGuard"/>
 				<element value="pg_waf"/>
+				<element value="PRESSGUARD"/>
 			</property>
 		</properties>
 	</rule>

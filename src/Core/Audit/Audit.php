@@ -142,7 +142,11 @@ final class Audit implements Module {
 		}
 
 		// Score: deduct by severity.
-		$weights = array( 1 => 4, 2 => 8, 3 => 14 );
+		$weights = array(
+			1 => 4,
+			2 => 8,
+			3 => 14,
+		);
 		$score   = 100;
 		foreach ( $findings as $finding ) {
 			$score -= isset( $weights[ $finding['severity'] ] ) ? $weights[ $finding['severity'] ] : 5;
@@ -184,7 +188,11 @@ final class Audit implements Module {
 		$result = $this->run();
 		$score  = $result['score'];
 		$color  = $score >= 85 ? '#00a32a' : ( $score >= 60 ? '#dba617' : '#d63638' );
-		$sev    = array( 1 => __( 'Low', 'pressguard' ), 2 => __( 'Medium', 'pressguard' ), 3 => __( 'High', 'pressguard' ) );
+		$sev    = array(
+			1 => __( 'Low', 'pressguard' ),
+			2 => __( 'Medium', 'pressguard' ),
+			3 => __( 'High', 'pressguard' ),
+		);
 		?>
 		<div class="wrap pressguard-wrap">
 			<h1><?php esc_html_e( 'Security Audit', 'pressguard' ); ?></h1>

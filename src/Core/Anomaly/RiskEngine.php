@@ -52,11 +52,18 @@ final class RiskEngine {
 		}
 		$weight = isset( self::$weights[ $signal ] ) ? self::$weights[ $signal ] : 3;
 
-		$state = get_transient( self::key( $ip ) );
+		$state              = get_transient( self::key( $ip ) );
 		list( $score, $ts ) = self::decay( $state );
 
 		$score += $weight;
-		set_transient( self::key( $ip ), array( 'score' => $score, 'ts' => time() ), self::TTL );
+		set_transient(
+			self::key( $ip ),
+			array(
+				'score' => $score,
+				'ts'    => time(),
+			),
+			self::TTL
+		);
 		unset( $ts );
 
 		return $score;

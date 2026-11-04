@@ -110,8 +110,10 @@ final class BreachedPassword {
 		if ( ! (bool) $this->plugin->config()->get( 'login.breached.block_on_set', true ) ) {
 			return;
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- core profile form nonce already checked by WP.
-		$pass = isset( $_POST['pass1'] ) ? (string) $_POST['pass1'] : '';
+		// A password must be used verbatim (no sanitization that would alter it);
+		// the core profile form's nonce is already verified by WordPress.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$pass = isset( $_POST['pass1'] ) ? (string) wp_unslash( $_POST['pass1'] ) : '';
 		if ( '' === $pass ) {
 			return;
 		}

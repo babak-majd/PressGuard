@@ -61,7 +61,7 @@ final class Challenge {
 	 * Serve the key authorization when the request matches a stored token.
 	 */
 	public function maybe_serve() {
-		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
 		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 
 		if ( 0 !== strpos( $path, self::PREFIX ) ) {

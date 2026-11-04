@@ -135,9 +135,9 @@ final class EventsTable extends \WP_List_Table {
 			? (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $params ) )
 			: (int) $wpdb->get_var( $count_sql );
 
-		$data_sql     = "SELECT * FROM {$table} WHERE {$where} ORDER BY id DESC LIMIT %d OFFSET %d";
-		$data_params  = array_merge( $params, array( $per_page, $offset ) );
-		$this->items  = $wpdb->get_results( $wpdb->prepare( $data_sql, $data_params ), ARRAY_A );
+		$data_sql    = "SELECT * FROM {$table} WHERE {$where} ORDER BY id DESC LIMIT %d OFFSET %d";
+		$data_params = array_merge( $params, array( $per_page, $offset ) );
+		$this->items = $wpdb->get_results( $wpdb->prepare( $data_sql, $data_params ), ARRAY_A );
 		// phpcs:enable
 
 		$this->set_pagination_args(

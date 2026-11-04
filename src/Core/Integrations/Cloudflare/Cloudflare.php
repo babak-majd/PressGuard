@@ -22,7 +22,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Cloudflare implements Module {
 
-	const ADMIN_SLUG = 'pressguard-cloudflare';
+	const ADMIN_SLUG  = 'pressguard-cloudflare';
 	const REVERT_HOOK = 'pressguard_cf_revert_attack';
 
 	/**
@@ -112,7 +112,7 @@ final class Cloudflare implements Module {
 		$notice = 'saved';
 
 		if ( 'connect' === $do ) {
-			$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
+			$token  = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
 			$notice = $this->connect( $token ) ? 'connected' : 'error';
 		} elseif ( 'disconnect' === $do ) {
 			$config->set( 'cloudflare.token', '' );
@@ -161,7 +161,14 @@ final class Cloudflare implements Module {
 		}
 		$config->set( 'cloudflare.ip_ranges', $api->ip_ranges() );
 
-		$this->plugin->logger()->log( 'cloudflare', 'connected', array( 'severity' => 2, 'message' => 'Cloudflare connected.' ) );
+		$this->plugin->logger()->log(
+			'cloudflare',
+			'connected',
+			array(
+				'severity' => 2,
+				'message'  => 'Cloudflare connected.',
+			)
+		);
 		return true;
 	}
 
@@ -171,14 +178,13 @@ final class Cloudflare implements Module {
 	 * @return bool
 	 */
 	private function apply_free_settings() {
-		$zone = (array) $this->plugin->config()->get( 'cloudflare.zone', array() );
+		$zone  = (array) $this->plugin->config()->get( 'cloudflare.zone', array() );
 		$token = $this->token();
 		if ( empty( $zone['id'] ) || '' === $token ) {
 			return false;
 		}
 		$api = new Api( $token );
-		$ok  = true;
-		$ok  = $api->set_setting( $zone['id'], 'always_use_https', 'on' ) && $ok;
+		$ok  = $api->set_setting( $zone['id'], 'always_use_https', 'on' );
 		$ok  = $api->set_setting( $zone['id'], 'automatic_https_rewrites', 'on' ) && $ok;
 		$ok  = $api->set_setting( $zone['id'], 'ssl', 'full' ) && $ok;
 		$ok  = $api->set_setting( $zone['id'], 'min_tls_version', '1.2' ) && $ok;
@@ -188,7 +194,14 @@ final class Cloudflare implements Module {
 		// plans/tokens can't toggle it) so it doesn't fail the whole apply.
 		$api->set_bot_fight_mode( $zone['id'], true );
 
-		$this->plugin->logger()->log( 'cloudflare', 'free_settings', array( 'severity' => 2, 'message' => 'Applied free security settings.' ) );
+		$this->plugin->logger()->log(
+			'cloudflare',
+			'free_settings',
+			array(
+				'severity' => 2,
+				'message'  => 'Applied free security settings.',
+			)
+		);
 		return $ok;
 	}
 
@@ -224,7 +237,14 @@ final class Cloudflare implements Module {
 			return;
 		}
 		$this->set_under_attack( true );
-		$this->plugin->logger()->log( 'cloudflare', 'auto_under_attack', array( 'severity' => 4, 'message' => 'Auto-enabled Cloudflare Under Attack.' ) );
+		$this->plugin->logger()->log(
+			'cloudflare',
+			'auto_under_attack',
+			array(
+				'severity' => 4,
+				'message'  => 'Auto-enabled Cloudflare Under Attack.',
+			)
+		);
 		wp_schedule_single_event( max( $until, time() + 300 ), self::REVERT_HOOK );
 	}
 
@@ -234,7 +254,14 @@ final class Cloudflare implements Module {
 	public function revert_attack() {
 		if ( $this->plugin->config()->get( 'cloudflare.under_attack_active', false ) ) {
 			$this->set_under_attack( false );
-			$this->plugin->logger()->log( 'cloudflare', 'under_attack_revert', array( 'severity' => 2, 'message' => 'Reverted Cloudflare Under Attack.' ) );
+			$this->plugin->logger()->log(
+				'cloudflare',
+				'under_attack_revert',
+				array(
+					'severity' => 2,
+					'message'  => 'Reverted Cloudflare Under Attack.',
+				)
+			);
 		}
 	}
 

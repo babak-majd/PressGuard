@@ -75,13 +75,13 @@ final class Permissions implements Module {
 	 */
 	private function targets() {
 		$targets = array(
-			untrailingslashit( ABSPATH )          => 0755,
-			ABSPATH . 'wp-admin'                   => 0755,
-			ABSPATH . 'wp-includes'                => 0755,
-			untrailingslashit( WP_CONTENT_DIR )    => 0755,
-			WP_CONTENT_DIR . '/uploads'            => 0755,
-			ABSPATH . 'wp-config.php'              => 0640,
-			ABSPATH . '.htaccess'                  => 0644,
+			untrailingslashit( ABSPATH )        => 0755,
+			ABSPATH . 'wp-admin'                => 0755,
+			ABSPATH . 'wp-includes'             => 0755,
+			untrailingslashit( WP_CONTENT_DIR ) => 0755,
+			WP_CONTENT_DIR . '/uploads'         => 0755,
+			ABSPATH . 'wp-config.php'           => 0640,
+			ABSPATH . '.htaccess'               => 0644,
 		);
 
 		return array_filter(
@@ -172,7 +172,7 @@ final class Permissions implements Module {
 		}
 
 		$before = fileperms( $path ) & 0777;
-		$ok      = @chmod( $path, $mode ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		$ok     = @chmod( $path, $mode ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 
 		$this->plugin->logger()->log(
 			'permissions',

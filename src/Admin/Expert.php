@@ -73,11 +73,16 @@ final class Expert {
 		} elseif ( 'add_custom' === $do ) {
 			$this->add_custom();
 		} elseif ( 'remove_custom' === $do ) {
-			$id      = isset( $_POST['rule_id'] ) ? sanitize_text_field( wp_unslash( $_POST['rule_id'] ) ) : '';
-			$custom  = (array) $c->get( 'firewall.custom_rules', array() );
-			$custom  = array_values( array_filter( $custom, static function ( $r ) use ( $id ) {
-				return ( $r['id'] ?? '' ) !== $id;
-			} ) );
+			$id     = isset( $_POST['rule_id'] ) ? sanitize_text_field( wp_unslash( $_POST['rule_id'] ) ) : '';
+			$custom = (array) $c->get( 'firewall.custom_rules', array() );
+			$custom = array_values(
+				array_filter(
+					$custom,
+					static function ( $r ) use ( $id ) {
+						return ( $r['id'] ?? '' ) !== $id;
+					}
+				)
+			);
 			$c->set( 'firewall.custom_rules', $custom );
 		}
 

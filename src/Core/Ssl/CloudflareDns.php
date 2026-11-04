@@ -60,7 +60,7 @@ final class CloudflareDns {
 	 *
 	 * @param string $name  Record name (e.g. _acme-challenge.example.com).
 	 * @param string $value TXT value.
-	 * @return string Record id.
+	 * @return array{zone:string,record:string} Zone + record ids.
 	 */
 	public function add_txt( $name, $value ) {
 		$zone = $this->zone_id( $name );

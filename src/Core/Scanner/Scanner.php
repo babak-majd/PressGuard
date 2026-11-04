@@ -36,11 +36,37 @@ final class Scanner implements Module {
 	 * @var string[]
 	 */
 	private static $skip_ext = array(
-		'jpg', 'jpeg', 'png', 'gif', 'webp', 'ico', 'bmp', 'tiff',
-		'mp4', 'mp3', 'wav', 'avi', 'mov', 'mkv', 'ogg', 'webm',
-		'zip', 'gz', 'tar', 'bz2', '7z', 'rar',
-		'woff', 'woff2', 'ttf', 'eot', 'otf',
-		'pdf', 'psd', 'mo', 'webp',
+		'jpg',
+		'jpeg',
+		'png',
+		'gif',
+		'webp',
+		'ico',
+		'bmp',
+		'tiff',
+		'mp4',
+		'mp3',
+		'wav',
+		'avi',
+		'mov',
+		'mkv',
+		'ogg',
+		'webm',
+		'zip',
+		'gz',
+		'tar',
+		'bz2',
+		'7z',
+		'rar',
+		'woff',
+		'woff2',
+		'ttf',
+		'eot',
+		'otf',
+		'pdf',
+		'psd',
+		'mo',
+		'webp',
 	);
 
 	/**
@@ -564,9 +590,9 @@ final class Scanner implements Module {
 	 * @return array
 	 */
 	private function public_state() {
-		$state   = $this->get_state();
-		$total   = max( 1, (int) ( $state['total'] ?? 1 ) );
-		$percent = min( 100, (int) round( ( (int) ( $state['offset'] ?? 0 ) / $total ) * 100 ) );
+		$state            = $this->get_state();
+		$total            = max( 1, (int) ( $state['total'] ?? 1 ) );
+		$percent          = min( 100, (int) round( ( (int) ( $state['offset'] ?? 0 ) / $total ) * 100 ) );
 		$state['percent'] = empty( $state ) ? 0 : $percent;
 		$state['status']  = $state['status'] ?? 'idle';
 		return $state;

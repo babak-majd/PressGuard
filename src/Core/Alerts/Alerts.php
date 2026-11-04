@@ -142,7 +142,7 @@ final class Alerts implements Module {
 	 * Send a Telegram message via the bot API.
 	 *
 	 * @param \PressGuard\Support\Config $config  Config.
-	 * @param string                    $message Message.
+	 * @param string                     $message Message.
 	 */
 	private function send_telegram( $config, $message ) {
 		$token = (string) $config->get( 'alerts.telegram.token', '' );
@@ -203,7 +203,7 @@ final class Alerts implements Module {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$c   = $this->plugin->config();
+		$c    = $this->plugin->config();
 		$post = admin_url( 'admin-post.php' );
 		?>
 		<div class="wrap pressguard-wrap">
@@ -218,7 +218,14 @@ final class Alerts implements Module {
 					<tr><th><?php esc_html_e( 'Enable alerts', 'pressguard' ); ?></th><td><label><input type="checkbox" name="enabled" value="1" <?php checked( (bool) $c->get( 'alerts.enabled', false ) ); ?> /> <?php esc_html_e( 'On', 'pressguard' ); ?></label></td></tr>
 					<tr><th><?php esc_html_e( 'Minimum severity', 'pressguard' ); ?></th><td>
 						<select name="min_severity">
-							<?php foreach ( array( 2 => 'Notice', 3 => 'Warning', 4 => 'Error', 5 => 'Critical' ) as $lvl => $lbl ) : ?>
+							<?php
+							foreach ( array(
+								2 => 'Notice',
+								3 => 'Warning',
+								4 => 'Error',
+								5 => 'Critical',
+							) as $lvl => $lbl ) :
+								?>
 								<option value="<?php echo (int) $lvl; ?>" <?php selected( (int) $c->get( 'alerts.min_severity', 4 ), $lvl ); ?>><?php echo esc_html( $lbl ); ?></option>
 							<?php endforeach; ?>
 						</select>

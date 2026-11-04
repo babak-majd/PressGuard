@@ -168,7 +168,10 @@ final class ImportExport {
 			}
 		}
 
-		return array( 'data' => $incoming, 'skipped' => $skipped );
+		return array(
+			'data'    => $incoming,
+			'skipped' => $skipped,
+		);
 	}
 
 	/**
@@ -188,7 +191,11 @@ final class ImportExport {
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings imported.', 'pressguard' ); ?></p></div>
 				<?php if ( is_array( $report ) && ! empty( $report ) ) : ?>
 					<div class="notice notice-warning"><p><strong><?php esc_html_e( 'Skipped (environment-dependent or sensitive):', 'pressguard' ); ?></strong></p>
-						<ul style="list-style:disc;margin-inline-start:20px;"><?php foreach ( $report as $line ) : ?><li><?php echo esc_html( $line ); ?></li><?php endforeach; ?></ul>
+						<ul style="list-style:disc;margin-inline-start:20px;">
+						<?php
+						foreach ( $report as $line ) :
+							?>
+							<li><?php echo esc_html( $line ); ?></li><?php endforeach; ?></ul>
 					</div>
 					<?php delete_transient( 'pressguard_import_report' ); ?>
 				<?php endif; ?>

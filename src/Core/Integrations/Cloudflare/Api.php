@@ -126,9 +126,9 @@ final class Api {
 	 * @return string[]
 	 */
 	public function ip_ranges() {
-		$res  = $this->request( 'GET', '/ips' );
-		$v4   = (array) ( $res['result']['ipv4_cidrs'] ?? array() );
-		$v6   = (array) ( $res['result']['ipv6_cidrs'] ?? array() );
+		$res = $this->request( 'GET', '/ips' );
+		$v4  = (array) ( $res['result']['ipv4_cidrs'] ?? array() );
+		$v6  = (array) ( $res['result']['ipv6_cidrs'] ?? array() );
 		return array_merge( $v4, $v6 );
 	}
 
@@ -154,7 +154,10 @@ final class Api {
 		}
 		$res = wp_remote_request( self::BASE . $path, $args );
 		if ( is_wp_error( $res ) ) {
-			return array( 'success' => false, 'errors' => array( $res->get_error_message() ) );
+			return array(
+				'success' => false,
+				'errors'  => array( $res->get_error_message() ),
+			);
 		}
 		$decoded = json_decode( wp_remote_retrieve_body( $res ), true );
 		return is_array( $decoded ) ? $decoded : array( 'success' => false );

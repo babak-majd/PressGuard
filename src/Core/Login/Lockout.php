@@ -51,7 +51,7 @@ final class Lockout {
 	 * Wire authentication hooks.
 	 */
 	public function register() {
-		add_filter( 'authenticate', array( $this, 'check_lock' ), 30, 3 );
+		add_filter( 'authenticate', array( $this, 'check_lock' ), 30, 2 );
 		add_action( 'wp_login_failed', array( $this, 'record_failure' ) );
 		add_action( 'wp_login', array( $this, 'clear_on_success' ), 10, 2 );
 	}
@@ -60,7 +60,7 @@ final class Lockout {
 	 * Block authentication while an IP is locked out.
 	 *
 	 * @param \WP_User|\WP_Error|null $user     Current auth result.
-	 * @param string                 $username Attempted username.
+	 * @param string                  $username Attempted username.
 	 * @return \WP_User|\WP_Error|null
 	 */
 	public function check_lock( $user, $username = '' ) {
@@ -130,7 +130,7 @@ final class Lockout {
 			return;
 		}
 
-		$config    = $this->plugin->config();
+		$config     = $this->plugin->config();
 		$max        = max( 1, (int) $config->get( 'login.lockout.max_attempts', 5 ) );
 		$window     = max( 60, (int) $config->get( 'login.lockout.window', 900 ) );
 		$base_delay = max( 60, (int) $config->get( 'login.lockout.base_delay', 300 ) );

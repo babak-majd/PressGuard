@@ -21,24 +21,18 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Updater implements Module {
 
-	const REPO       = 'babak-majd/PressGuard';
-	const CACHE_KEY  = 'pressguard_update_check';
-	const CACHE_TTL  = 43200; // 12h.
+	const REPO      = 'babak-majd/PressGuard';
+	const CACHE_KEY = 'pressguard_update_check';
+	const CACHE_TTL = 43200; // 12h.
 
 	/**
-	 * Plugin container.
+	 * Constructor. Accepts the container to satisfy the module contract; the
+	 * updater itself works from the PRESSGUARD_* constants and GitHub.
 	 *
-	 * @var Plugin
-	 */
-	private $plugin;
-
-	/**
-	 * Constructor.
-	 *
-	 * @param Plugin $plugin Container.
+	 * @param Plugin $plugin Container (unused).
 	 */
 	public function __construct( Plugin $plugin ) {
-		$this->plugin = $plugin;
+		unset( $plugin );
 	}
 
 	/**

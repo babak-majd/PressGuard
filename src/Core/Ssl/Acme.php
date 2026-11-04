@@ -375,8 +375,8 @@ final class Acme {
 	/**
 	 * Finalize the order with the CSR, then poll + download the certificate.
 	 *
-	 * @param array  $order    Order object.
-	 * @param string $cert_key Certificate private key (PEM).
+	 * @param array    $order    Order object.
+	 * @param string   $cert_key Certificate private key (PEM).
 	 * @param string[] $domains Domains.
 	 * @return string Certificate chain (PEM).
 	 */

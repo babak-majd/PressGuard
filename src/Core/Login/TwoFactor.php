@@ -83,7 +83,7 @@ final class TwoFactor {
 	 */
 	private function needs_enforcement() {
 		$user = wp_get_current_user();
-		if ( ! $user || 0 === $user->ID || self::is_enabled_for( $user->ID ) ) {
+		if ( 0 === $user->ID || self::is_enabled_for( $user->ID ) ) {
 			return false;
 		}
 		$roles = (array) $this->plugin->config()->get( 'login.two_factor.enforce_roles', array() );
