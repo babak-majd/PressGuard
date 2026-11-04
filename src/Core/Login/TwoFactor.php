@@ -53,6 +53,12 @@ final class TwoFactor {
 		add_filter( 'authenticate', array( $this, 'enforce' ), 50, 1 );
 		add_action( 'login_form', array( $this, 'render_login_field' ) );
 
+		// Optional role-based enforcement (nag + redirect after a grace period).
+		if ( ! empty( (array) $this->plugin->config()->get( 'login.two_factor.enforce_roles', array() ) ) ) {
+			add_action( 'admin_init', array( $this, 'enforce_admin' ) );
+			add_action( 'admin_notices', array( $this, 'enforce_notice' ) );
+		}
+
 		// Profile setup UI.
 		add_action( 'show_user_profile', array( $this, 'render_profile' ) );
 		add_action( 'edit_user_profile', array( $this, 'render_profile' ) );
@@ -68,6 +74,80 @@ final class TwoFactor {
 	 */
 	public static function is_enabled_for( $user_id ) {
 		return (bool) get_user_meta( $user_id, self::META_ENABLED, true );
+	}
+
+	/**
+	 * Does the current user fall under 2FA enforcement and still lack it?
+	 *
+	 * @return bool
+	 */
+	private function needs_enforcement() {
+		$user = wp_get_current_user();
+		if ( ! $user || 0 === $user->ID || self::is_enabled_for( $user->ID ) ) {
+			return false;
+		}
+		$roles = (array) $this->plugin->config()->get( 'login.two_factor.enforce_roles', array() );
+		return (bool) array_intersect( (array) $user->roles, $roles );
+	}
+
+	/**
+	 * Grace period in seconds before enforcement blocks admin access.
+	 *
+	 * @param int $user_id User id.
+	 * @return int Seconds remaining (0 = grace over).
+	 */
+	private function grace_remaining( $user_id ) {
+		$days  = max( 0, (int) $this->plugin->config()->get( 'login.two_factor.grace_days', 7 ) );
+		$since = (int) get_user_meta( $user_id, 'pressguard_2fa_enforce_since', true );
+		if ( ! $since ) {
+			$since = time();
+			update_user_meta( $user_id, 'pressguard_2fa_enforce_since', $since );
+		}
+		$deadline = $since + ( $days * DAY_IN_SECONDS );
+		return max( 0, $deadline - time() );
+	}
+
+	/**
+	 * After the grace period, confine an un-enrolled enforced user to their
+	 * profile until they set up 2FA (logout always allowed).
+	 */
+	public function enforce_admin() {
+		if ( ! $this->needs_enforcement() ) {
+			return;
+		}
+		if ( $this->grace_remaining( get_current_user_id() ) > 0 ) {
+			return; // Still in grace — just nag (see enforce_notice).
+		}
+
+		global $pagenow;
+		$allowed_pages = array( 'profile.php', 'admin-ajax.php', 'admin-post.php', 'options.php' );
+		if ( in_array( $pagenow, $allowed_pages, true ) ) {
+			return;
+		}
+		if ( wp_doing_ajax() || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+			return;
+		}
+
+		wp_safe_redirect( admin_url( 'profile.php#pressguard-2fa' ) );
+		exit;
+	}
+
+	/**
+	 * Nag enforced users to set up 2FA, showing the time left.
+	 */
+	public function enforce_notice() {
+		if ( ! $this->needs_enforcement() ) {
+			return;
+		}
+		$left = $this->grace_remaining( get_current_user_id() );
+		$msg  = $left > 0
+			? sprintf(
+				/* translators: %d: days remaining */
+				__( 'Two-factor authentication is required for your role. Please set it up within %d day(s) on your profile.', 'pressguard' ),
+				(int) ceil( $left / DAY_IN_SECONDS )
+			)
+			: __( 'Two-factor authentication is required. Set it up on your profile to continue.', 'pressguard' );
+		echo '<div class="notice notice-warning"><p><strong>PressGuard:</strong> ' . esc_html( $msg ) . '</p></div>';
 	}
 
 	/**

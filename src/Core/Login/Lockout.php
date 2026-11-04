@@ -51,7 +51,7 @@ final class Lockout {
 	 * Wire authentication hooks.
 	 */
 	public function register() {
-		add_filter( 'authenticate', array( $this, 'check_lock' ), 30 );
+		add_filter( 'authenticate', array( $this, 'check_lock' ), 30, 3 );
 		add_action( 'wp_login_failed', array( $this, 'record_failure' ) );
 		add_action( 'wp_login', array( $this, 'clear_on_success' ), 10, 2 );
 	}
@@ -59,11 +59,29 @@ final class Lockout {
 	/**
 	 * Block authentication while an IP is locked out.
 	 *
-	 * @param \WP_User|\WP_Error|null $user Current auth result.
+	 * @param \WP_User|\WP_Error|null $user     Current auth result.
+	 * @param string                 $username Attempted username.
 	 * @return \WP_User|\WP_Error|null
 	 */
-	public function check_lock( $user ) {
+	public function check_lock( $user, $username = '' ) {
 		$ip = $this->ip->client_ip();
+
+		// Per-account lock: blocks a targeted account regardless of source IP
+		// (defends against distributed/password-spraying attacks).
+		if ( '' !== $username && (bool) $this->plugin->config()->get( 'login.lockout.per_account', true ) ) {
+			$acct_until = (int) get_transient( $this->account_key( $username ) );
+			if ( $acct_until > time() && ! $this->is_whitelisted( $ip ) ) {
+				return new \WP_Error(
+					'pressguard_account_locked',
+					sprintf(
+						/* translators: %d: seconds remaining */
+						__( 'This account is temporarily locked. Try again in %d seconds.', 'pressguard' ),
+						$acct_until - time()
+					)
+				);
+			}
+		}
+
 		if ( '' === $ip || $this->is_whitelisted( $ip ) ) {
 			return $user;
 		}
@@ -116,6 +134,19 @@ final class Lockout {
 		$max        = max( 1, (int) $config->get( 'login.lockout.max_attempts', 5 ) );
 		$window     = max( 60, (int) $config->get( 'login.lockout.window', 900 ) );
 		$base_delay = max( 60, (int) $config->get( 'login.lockout.base_delay', 300 ) );
+
+		// Per-account counting (independent of IP).
+		if ( '' !== $username && (bool) $config->get( 'login.lockout.per_account', true ) ) {
+			$akey   = $this->account_count_key( $username );
+			$acount = (int) get_transient( $akey ) + 1;
+			set_transient( $akey, $acount, $window );
+			$amax = max( 1, (int) $config->get( 'login.lockout.account_max', 10 ) );
+			if ( $acount >= $amax ) {
+				$aover = intdiv( $acount, $amax ) - 1;
+				$adur  = min( DAY_IN_SECONDS, $base_delay * ( 2 ** max( 0, $aover ) ) );
+				set_transient( $this->account_key( $username ), time() + $adur, $adur );
+			}
+		}
 
 		$count_key = $this->count_key( $ip );
 		$count     = (int) get_transient( $count_key ) + 1;
@@ -203,5 +234,25 @@ final class Lockout {
 	 */
 	private function count_key( $ip ) {
 		return self::PREFIX . 'count_' . md5( $ip );
+	}
+
+	/**
+	 * Transient key for a per-account lock.
+	 *
+	 * @param string $username Username.
+	 * @return string
+	 */
+	private function account_key( $username ) {
+		return self::PREFIX . 'acct_until_' . md5( strtolower( $username ) );
+	}
+
+	/**
+	 * Transient key for a per-account failure count.
+	 *
+	 * @param string $username Username.
+	 * @return string
+	 */
+	private function account_count_key( $username ) {
+		return self::PREFIX . 'acct_count_' . md5( strtolower( $username ) );
 	}
 }

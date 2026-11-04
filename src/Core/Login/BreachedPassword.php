@@ -42,6 +42,29 @@ final class BreachedPassword {
 	public function register() {
 		add_action( 'user_profile_update_errors', array( $this, 'block_on_set' ), 10, 3 );
 		add_filter( 'wp_authenticate_user', array( $this, 'flag_on_login' ), 20, 2 );
+		add_action( 'admin_notices', array( $this, 'breach_notice' ) );
+	}
+
+	/**
+	 * Warn a user whose last login used a breached password to change it.
+	 */
+	public function breach_notice() {
+		$uid = get_current_user_id();
+		if ( ! $uid || ! get_transient( 'pressguard_breached_notice_' . $uid ) ) {
+			return;
+		}
+		echo '<div class="notice notice-error"><p>';
+		printf(
+			/* translators: %s: profile URL */
+			wp_kses_post( __( '<strong>PressGuard:</strong> your password was found in a known data breach. Please <a href="%s">change it now</a>.', 'pressguard' ) ),
+			esc_url( admin_url( 'profile.php' ) )
+		);
+		echo '</p></div>';
+
+		// Stop nagging once they're on the profile page editing it.
+		if ( isset( $GLOBALS['pagenow'] ) && 'profile.php' === $GLOBALS['pagenow'] ) {
+			delete_transient( 'pressguard_breached_notice_' . $uid );
+		}
 	}
 
 	/**

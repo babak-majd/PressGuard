@@ -84,6 +84,68 @@ final class Scanner implements Module {
 		add_action( 'wp_ajax_pressguard_scan_step', array( $this, 'ajax_step' ) );
 		add_action( 'wp_ajax_pressguard_scan_status', array( $this, 'ajax_status' ) );
 		add_action( self::CRON_HOOK, array( $this, 'cron_step' ) );
+		add_action( 'admin_post_pressguard_remediate', array( $this, 'handle_remediate' ) );
+	}
+
+	/**
+	 * Quarantine or delete a flagged file (never a core file).
+	 */
+	public function handle_remediate() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'pressguard' ) );
+		}
+		check_admin_referer( 'pressguard_remediate' );
+
+		$op  = isset( $_POST['op'] ) ? sanitize_key( wp_unslash( $_POST['op'] ) ) : '';
+		$rel = isset( $_POST['file'] ) ? wp_unslash( $_POST['file'] ) : '';
+		$rel = ltrim( str_replace( array( '..', "\0" ), '', (string) $rel ), '/' );
+		$abs = ABSPATH . $rel;
+
+		$status = 'none';
+		// Only act inside wp-content, never on core, and only on a real file.
+		$content_rel = ltrim( str_replace( ABSPATH, '', WP_CONTENT_DIR ), '/' );
+		if ( '' !== $rel && 0 === strpos( $rel, $content_rel ) && is_file( $abs ) ) {
+			if ( 'delete' === $op ) {
+				$status = @unlink( $abs ) ? 'deleted' : 'failed'; // phpcs:ignore
+			} elseif ( 'quarantine' === $op ) {
+				$status = $this->quarantine( $abs, $rel ) ? 'quarantined' : 'failed';
+			}
+			$this->plugin->logger()->log(
+				'scanner',
+				'remediate_' . $op,
+				array(
+					'severity' => Logger::SEVERITY_WARNING,
+					'message'  => sprintf( '%s %s: %s', $op, $rel, $status ),
+				)
+			);
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::ADMIN_SLUG . '&remediated=' . $status ) );
+		exit;
+	}
+
+	/**
+	 * Move a file into a protected quarantine folder (web-inaccessible).
+	 *
+	 * @param string $abs Absolute path.
+	 * @param string $rel Relative path.
+	 * @return bool
+	 */
+	private function quarantine( $abs, $rel ) {
+		$uploads = wp_upload_dir();
+		$qdir    = trailingslashit( $uploads['basedir'] ) . 'pressguard/quarantine';
+		if ( ! wp_mkdir_p( $qdir ) ) {
+			return false;
+		}
+		// Deny all web access to the quarantine folder.
+		if ( ! file_exists( $qdir . '/.htaccess' ) ) {
+			@file_put_contents( $qdir . '/.htaccess', "Require all denied\nDeny from all\n" ); // phpcs:ignore
+		}
+		if ( ! file_exists( $qdir . '/index.php' ) ) {
+			@file_put_contents( $qdir . '/index.php', "<?php // Silence is golden.\n" ); // phpcs:ignore
+		}
+		$target = $qdir . '/' . md5( $rel ) . '_' . basename( $abs ) . '.quarantined';
+		return @rename( $abs, $target ); // phpcs:ignore
 	}
 
 	/**
@@ -520,6 +582,28 @@ final class Scanner implements Module {
 		return ltrim( str_replace( ABSPATH, '', $path ), '/' );
 	}
 
+	/**
+	 * Render a quarantine/delete action button for a finding.
+	 *
+	 * @param string $file  Relative file path.
+	 * @param string $op    Operation (quarantine|delete).
+	 * @param string $label Button label.
+	 */
+	private function remediate_button( $file, $op, $label ) {
+		$confirm = ( 'delete' === $op )
+			? __( 'Permanently delete this file?', 'pressguard' )
+			: __( 'Move this file to quarantine (web-inaccessible)?', 'pressguard' );
+		?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+			<input type="hidden" name="action" value="pressguard_remediate" />
+			<input type="hidden" name="op" value="<?php echo esc_attr( $op ); ?>" />
+			<input type="hidden" name="file" value="<?php echo esc_attr( $file ); ?>" />
+			<?php wp_nonce_field( 'pressguard_remediate' ); ?>
+			<button type="submit" class="button button-small" onclick="return confirm('<?php echo esc_js( $confirm ); ?>');"><?php echo esc_html( $label ); ?></button>
+		</form>
+		<?php
+	}
+
 	// ---- Admin screen ------------------------------------------------------
 
 	/**
@@ -580,7 +664,28 @@ final class Scanner implements Module {
 				</p>
 			<?php endif; ?>
 
+			<?php
+			if ( isset( $_GET['remediated'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$st = sanitize_key( wp_unslash( $_GET['remediated'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$ok = in_array( $st, array( 'deleted', 'quarantined' ), true );
+				echo '<div class="notice notice-' . ( $ok ? 'success' : 'warning' ) . ' is-dismissible"><p>' . esc_html( ucfirst( $st ) ) . '</p></div>';
+			endif;
+
+			$has_core = false;
+			foreach ( $findings as $f ) {
+				if ( 0 === strpos( (string) ( $f['type'] ?? '' ), 'core_' ) ) {
+					$has_core = true;
+					break;
+				}
+			}
+			?>
 			<h2><?php esc_html_e( 'Scan report', 'pressguard' ); ?></h2>
+			<?php if ( $has_core ) : ?>
+				<div class="notice notice-warning inline"><p>
+					<?php esc_html_e( 'Modified core files detected. Reinstall WordPress core to restore the originals:', 'pressguard' ); ?>
+					<a class="button button-small" href="<?php echo esc_url( self_admin_url( 'update-core.php?action=do-core-reinstall' ) ); ?>"><?php esc_html_e( 'Reinstall core', 'pressguard' ); ?></a>
+				</p></div>
+			<?php endif; ?>
 			<?php if ( empty( $findings ) ) : ?>
 				<div class="notice notice-success inline"><p><?php esc_html_e( 'No threats found.', 'pressguard' ); ?></p></div>
 			<?php else : ?>
@@ -590,14 +695,22 @@ final class Scanner implements Module {
 						<th><?php esc_html_e( 'Type', 'pressguard' ); ?></th>
 						<th><?php esc_html_e( 'File', 'pressguard' ); ?></th>
 						<th><?php esc_html_e( 'Detail', 'pressguard' ); ?></th>
+						<th><?php esc_html_e( 'Action', 'pressguard' ); ?></th>
 					</tr></thead>
 					<tbody>
 					<?php foreach ( array_slice( $findings, 0, 1000 ) as $f ) : ?>
+						<?php $file_type = ( 'malware' === ( $f['type'] ?? '' ) || 'htaccess' === ( $f['type'] ?? '' ) ); ?>
 						<tr>
 							<td><?php echo (int) ( $f['score'] ?? 0 ); ?></td>
 							<td><code><?php echo esc_html( $f['type'] ?? '' ); ?></code></td>
 							<td><?php echo esc_html( $f['file'] ?? '' ); ?></td>
 							<td><?php echo esc_html( $f['detail'] ?? '' ); ?></td>
+							<td>
+								<?php if ( $file_type && ! empty( $f['file'] ) ) : ?>
+									<?php $this->remediate_button( $f['file'], 'quarantine', __( 'Quarantine', 'pressguard' ) ); ?>
+									<?php $this->remediate_button( $f['file'], 'delete', __( 'Delete', 'pressguard' ) ); ?>
+								<?php endif; ?>
+							</td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
