@@ -138,6 +138,7 @@ final class Plugin {
 			\PressGuard\Core\Access\Access::class,
 			\PressGuard\Core\Activity\Activity::class,
 			\PressGuard\Core\Anomaly\Behavior::class,
+			\PressGuard\Core\Traffic\LiveTraffic::class,
 			\PressGuard\Core\Ssl\Ssl::class,
 			\PressGuard\Core\Integrations\Cloudflare\Cloudflare::class,
 			\PressGuard\Core\Alerts\Alerts::class,

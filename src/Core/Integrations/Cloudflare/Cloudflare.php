@@ -184,6 +184,9 @@ final class Cloudflare implements Module {
 		$ok  = $api->set_setting( $zone['id'], 'min_tls_version', '1.2' ) && $ok;
 		$ok  = $api->set_setting( $zone['id'], 'browser_check', 'on' ) && $ok;
 		$ok  = $api->set_setting( $zone['id'], 'security_level', 'medium' ) && $ok;
+		// Bot Fight Mode is free but on a separate endpoint; best-effort (some
+		// plans/tokens can't toggle it) so it doesn't fail the whole apply.
+		$api->set_bot_fight_mode( $zone['id'], true );
 
 		$this->plugin->logger()->log( 'cloudflare', 'free_settings', array( 'severity' => 2, 'message' => 'Applied free security settings.' ) );
 		return $ok;

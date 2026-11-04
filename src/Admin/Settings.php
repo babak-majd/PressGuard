@@ -50,6 +50,8 @@ final class Settings {
 					array( 'key' => 'firewall.mode', 'type' => 'select', 'label' => __( 'Firewall mode', 'pressguard' ), 'options' => array( 'learning' => __( 'Learning (log only)', 'pressguard' ), 'detect' => __( 'Detection only', 'pressguard' ), 'enabled' => __( 'Enabled (block)', 'pressguard' ) ), 'default' => 'learning' ),
 					array( 'key' => 'anomaly.risk_scoring', 'type' => 'checkbox', 'label' => __( 'Behavioural risk scoring', 'pressguard' ), 'default' => true ),
 					array( 'key' => 'anomaly.risk_block', 'type' => 'number', 'label' => __( 'Risk score to block an IP', 'pressguard' ), 'default' => 40 ),
+					array( 'key' => 'traffic.enabled', 'type' => 'checkbox', 'label' => __( 'Log front-end traffic (Live Traffic)', 'pressguard' ), 'default' => false ),
+					array( 'key' => 'geo.mmdb_path', 'type' => 'text', 'label' => __( 'GeoLite2 .mmdb path (optional, for country lookup)', 'pressguard' ), 'default' => '' ),
 					array( 'key' => 'delete_data_on_uninstall', 'type' => 'checkbox', 'label' => __( 'Delete all PressGuard data when the plugin is uninstalled', 'pressguard' ), 'default' => false ),
 				),
 			),
@@ -58,6 +60,7 @@ final class Settings {
 				'fields' => array(
 					array( 'key' => 'firewall.enabled', 'type' => 'checkbox', 'label' => __( 'Enable firewall', 'pressguard' ), 'default' => true ),
 					array( 'key' => 'firewall.threshold', 'type' => 'number', 'label' => __( 'Anomaly score threshold', 'pressguard' ), 'default' => 5 ),
+					array( 'key' => 'firewall.auto_allowlist', 'type' => 'checkbox', 'label' => __( 'Learn allowlist in Learning mode (reduce false positives)', 'pressguard' ), 'default' => true ),
 					array( 'key' => 'firewall.rate_limit.enabled', 'type' => 'checkbox', 'label' => __( 'Enable rate limiting', 'pressguard' ), 'default' => false ),
 					array( 'key' => 'firewall.rate_limit.max', 'type' => 'number', 'label' => __( 'Max requests / window', 'pressguard' ), 'default' => 240 ),
 					array( 'key' => 'firewall.rate_limit.window', 'type' => 'number', 'label' => __( 'Window (seconds)', 'pressguard' ), 'default' => 60 ),

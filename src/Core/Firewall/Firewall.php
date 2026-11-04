@@ -180,6 +180,15 @@ final class Firewall implements Module {
 		$rules     = RuleSet::load( $config );
 		$threshold = max( 1, (int) $config->get( 'firewall.threshold', 5 ) );
 
+		// Learning-mode auto-allowlist: a (rule,path) that fired on a legitimate
+		// first-party action during learning is remembered and skipped later,
+		// so enabled mode doesn't false-positive on it.
+		$auto_allow = (bool) $config->get( 'firewall.auto_allowlist', true );
+		$path       = (string) wp_parse_url( $this->request_uri(), PHP_URL_PATH );
+		$learned    = array_flip( (array) $config->get( 'firewall.learned_allow', array() ) );
+		$learning   = ( 'learning' === $mode && $this->is_trusted_admin_context() );
+		$new_learn  = array();
+
 		$score   = 0;
 		$matched = array();
 
@@ -189,6 +198,16 @@ final class Firewall implements Module {
 				continue;
 			}
 			if ( $rule->matches( $subject ) ) {
+				$sig = $rule->id . '|' . $path;
+
+				if ( $auto_allow && isset( $learned[ $sig ] ) ) {
+					continue; // Known-good during learning — ignore.
+				}
+				if ( $auto_allow && $learning ) {
+					$new_learn[ $sig ] = true; // Legit admin action triggered a rule — learn it.
+					continue;
+				}
+
 				$score    += $rule->score;
 				$matched[] = $rule->id;
 				// Early exit once we're clearly over threshold in blocking mode.
@@ -196,6 +215,11 @@ final class Firewall implements Module {
 					break;
 				}
 			}
+		}
+
+		if ( ! empty( $new_learn ) ) {
+			$all = array_values( array_unique( array_merge( array_keys( $learned ), array_keys( $new_learn ) ) ) );
+			$config->set( 'firewall.learned_allow', array_slice( $all, -500 ) );
 		}
 
 		if ( $score < $threshold ) {

@@ -109,6 +109,18 @@ final class Api {
 	}
 
 	/**
+	 * Toggle Bot Fight Mode (free-plan bot protection). Best-effort.
+	 *
+	 * @param string $zone_id Zone id.
+	 * @param bool   $on      Enable.
+	 * @return bool
+	 */
+	public function set_bot_fight_mode( $zone_id, $on ) {
+		$res = $this->request( 'PUT', '/zones/' . $zone_id . '/bot_management', array( 'fight_mode' => (bool) $on ) );
+		return ! empty( $res['success'] );
+	}
+
+	/**
 	 * Cloudflare's published edge IP ranges (IPv4 + IPv6).
 	 *
 	 * @return string[]

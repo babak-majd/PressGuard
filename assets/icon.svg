@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="PressGuard">
+	<defs>
+		<linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#2271b1"/>
+			<stop offset="1" stop-color="#135e96"/>
+		</linearGradient>
+	</defs>
+	<path fill="url(#pg)" d="M64 6 18 24v34c0 29 20 49 46 64 26-15 46-35 46-64V24L64 6z"/>
+	<path fill="#fff" d="M56 84 38 66l8-8 10 10 26-26 8 8-34 34z"/>
+</svg>

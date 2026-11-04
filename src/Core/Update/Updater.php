@@ -175,6 +175,10 @@ final class Updater implements Module {
 			'sections'      => array(
 				'changelog' => wpautop( esc_html( $release['body'] ) ),
 			),
+			'icons'         => array(
+				'svg'     => PRESSGUARD_URL . 'assets/icon.svg',
+				'default' => PRESSGUARD_URL . 'assets/icon.svg',
+			),
 		);
 	}
 

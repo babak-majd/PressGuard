@@ -89,12 +89,51 @@ final class Geo {
 		}
 
 		$country = '';
-		if ( (bool) $this->config->get( 'geo.http_lookup', false ) ) {
+
+		// Prefer a local MaxMind GeoLite2 database when one is configured and a
+		// reader is available (no data leaves the server).
+		$country = $this->mmdb_lookup( $ip );
+
+		// Fallback: optional external HTTP geolocation.
+		if ( '' === $country && (bool) $this->config->get( 'geo.http_lookup', false ) ) {
 			$country = $this->http_lookup( $ip );
 		}
 
 		set_transient( $cache_key, $country, DAY_IN_SECONDS );
 		return $country;
+	}
+
+	/**
+	 * Resolve via a local MaxMind GeoLite2 .mmdb, using whichever reader the
+	 * host provides (the maxmind-db reader library or the geoip PHP extension).
+	 *
+	 * @param string $ip Client IP.
+	 * @return string
+	 */
+	private function mmdb_lookup( $ip ) {
+		$path = (string) $this->config->get( 'geo.mmdb_path', '' );
+		if ( '' !== $path && is_readable( $path ) && class_exists( '\MaxMind\Db\Reader' ) ) {
+			try {
+				$reader = new \MaxMind\Db\Reader( $path );
+				$rec    = $reader->get( $ip );
+				$reader->close();
+				if ( is_array( $rec ) && ! empty( $rec['country']['iso_code'] ) ) {
+					return strtoupper( (string) $rec['country']['iso_code'] );
+				}
+			} catch ( \Exception $e ) {
+				return '';
+			}
+		}
+
+		// Legacy geoip extension, if present.
+		if ( function_exists( 'geoip_country_code_by_name' ) ) {
+			$code = @geoip_country_code_by_name( $ip ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			if ( is_string( $code ) && 2 === strlen( $code ) ) {
+				return strtoupper( $code );
+			}
+		}
+
+		return '';
 	}
 
 	/**
