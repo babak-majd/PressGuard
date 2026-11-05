@@ -4,7 +4,7 @@ Tags: security, firewall, waf, two-factor, malware-scanner
 Requires at least: 5.6
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,13 @@ The firewall defaults to "learning" mode, which only logs. Review the Activity L
 No mandatory cloud. Optional lookups (breached-password, core checksums, geolocation) are explicitly opt-in or use privacy-preserving techniques.
 
 == Changelog ==
+
+= 0.1.1 =
+* Scanner: quarantine/delete actions for flagged files; reinstall link for modified core files.
+* Login: role-based 2FA enforcement with grace period; per-account lockout; breached-password notice; the 2FA code field now only appears for users who have 2FA.
+* Firewall: learning-mode auto-allowlist to reduce false positives; behavioural per-IP risk scoring.
+* New: Live Traffic logging/viewer; GeoLite2 (.mmdb) country lookup; Cloudflare Bot Fight Mode; plugin icon.
+* Quality: PHPUnit test suite; PHPCS (WordPress) and PHPStan (level 5) clean; expanded translations (fa, de, ru, ar, hi).
 
 = 0.1.0 =
 * Initial release: firewall (basic + extended), login protection + TOTP 2FA, hardening, malware & integrity scanning, audit, file permissions, roles & access, activity log, SSL/ACME issuance, Cloudflare integration, alerts, country blocking, behavioural risk scoring, import/export, setup wizard, and WooCommerce/Elementor/Gutenberg/cache/PressPilot compatibility.
