@@ -33,6 +33,13 @@ final class Login implements Module {
 	private $lockout = null;
 
 	/**
+	 * Whether an actual authentication failure occurred this request.
+	 *
+	 * @var bool
+	 */
+	private $auth_failed = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Plugin $plugin Container.
@@ -76,19 +83,31 @@ final class Login implements Module {
 		}
 
 		if ( (bool) $config->get( 'login.generic_errors', true ) ) {
+			add_action( 'wp_login_failed', array( $this, 'mark_auth_failed' ), 1 );
 			add_filter( 'login_errors', array( $this, 'generic_error' ) );
 		}
 	}
 
 	/**
-	 * Replace login error output with a single generic message so a failed
-	 * attempt never reveals whether the username existed.
+	 * Record that a real authentication attempt failed this request.
+	 */
+	public function mark_auth_failed() {
+		$this->auth_failed = true;
+	}
+
+	/**
+	 * Replace login error output with a single generic message — but ONLY for an
+	 * actual authentication failure. Benign notices (logged out, registered,
+	 * password reset, blocked cookies, …) are left untouched, so they don't look
+	 * like a rejected login.
 	 *
 	 * @param string $error Original error HTML.
 	 * @return string
 	 */
 	public function generic_error( $error ) {
-		unset( $error );
+		if ( ! $this->auth_failed ) {
+			return $error;
+		}
 		return __( 'Invalid login details.', 'pressguard' );
 	}
 }

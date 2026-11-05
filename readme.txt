@@ -4,7 +4,7 @@ Tags: security, firewall, waf, two-factor, malware-scanner
 Requires at least: 5.6
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,9 @@ The firewall defaults to "learning" mode, which only logs. Review the Activity L
 No mandatory cloud. Optional lookups (breached-password, core checksums, geolocation) are explicitly opt-in or use privacy-preserving techniques.
 
 == Changelog ==
+
+= 0.1.2 =
+* Fix: generic login-error message no longer replaces benign notices (logout, registration, password reset) — only real authentication failures.
 
 = 0.1.1 =
 * Scanner: quarantine/delete actions for flagged files; reinstall link for modified core files.
