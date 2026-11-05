@@ -249,15 +249,29 @@ final class TwoFactor {
 	}
 
 	/**
-	 * Render the code input on the login form.
+	 * Render the code input on the login form — but only after a username has
+	 * been submitted for a user who actually has 2FA enabled. On the initial
+	 * login page (and for users without 2FA) the field is not shown at all.
 	 */
 	public function render_login_field() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- this is the login form itself.
+		$login = isset( $_POST['log'] ) ? sanitize_user( wp_unslash( $_POST['log'] ) ) : '';
+		if ( '' === $login ) {
+			return;
+		}
+		$user = get_user_by( 'login', $login );
+		if ( ! $user ) {
+			$user = get_user_by( 'email', $login );
+		}
+		if ( ! $user || ! self::is_enabled_for( $user->ID ) ) {
+			return;
+		}
 		?>
 		<p>
-			<label for="pressguard_2fa"><?php esc_html_e( 'Two-factor code (if enabled)', 'pressguard' ); ?></label>
+			<label for="pressguard_2fa"><?php esc_html_e( 'Two-factor code', 'pressguard' ); ?></label>
 			<input type="text" name="<?php echo esc_attr( self::FIELD ); ?>" id="pressguard_2fa"
 				class="input" value="" size="20" autocomplete="one-time-code"
-				inputmode="numeric" pattern="[0-9A-Za-z]*" />
+				inputmode="numeric" pattern="[0-9A-Za-z]*" autofocus="autofocus" />
 		</p>
 		<?php
 	}
