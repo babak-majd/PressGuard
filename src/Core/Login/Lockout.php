@@ -8,6 +8,7 @@
 namespace PressGuard\Core\Login;
 
 use PressGuard\Plugin;
+use PressGuard\Support\Guard;
 use PressGuard\Support\Ip;
 use PressGuard\Support\Logger;
 
@@ -64,42 +65,48 @@ final class Lockout {
 	 * @return \WP_User|\WP_Error|null
 	 */
 	public function check_lock( $user, $username = '' ) {
-		$ip = $this->ip->client_ip();
+		try {
+			$ip = $this->ip->client_ip();
 
-		// Per-account lock: blocks a targeted account regardless of source IP
-		// (defends against distributed/password-spraying attacks).
-		if ( '' !== $username && (bool) $this->plugin->config()->get( 'login.lockout.per_account', true ) ) {
-			$acct_until = (int) get_transient( $this->account_key( $username ) );
-			if ( $acct_until > time() && ! $this->is_whitelisted( $ip ) ) {
+			// Per-account lock: blocks a targeted account regardless of source IP
+			// (defends against distributed/password-spraying attacks).
+			if ( '' !== $username && (bool) $this->plugin->config()->get( 'login.lockout.per_account', true ) ) {
+				$acct_until = (int) get_transient( $this->account_key( $username ) );
+				if ( $acct_until > time() && ! $this->is_whitelisted( $ip ) ) {
+					return new \WP_Error(
+						'pressguard_account_locked',
+						sprintf(
+							/* translators: %d: seconds remaining */
+							__( 'This account is temporarily locked. Try again in %d seconds.', 'pressguard' ),
+							$acct_until - time()
+						)
+					);
+				}
+			}
+
+			if ( '' === $ip || $this->is_whitelisted( $ip ) ) {
+				return $user;
+			}
+
+			$until = (int) get_transient( $this->lock_key( $ip ) );
+			if ( $until > time() ) {
+				$seconds = $until - time();
 				return new \WP_Error(
-					'pressguard_account_locked',
+					'pressguard_locked_out',
 					sprintf(
 						/* translators: %d: seconds remaining */
-						__( 'This account is temporarily locked. Try again in %d seconds.', 'pressguard' ),
-						$acct_until - time()
+						__( 'Too many failed attempts. Try again in %d seconds.', 'pressguard' ),
+						$seconds
 					)
 				);
 			}
-		}
 
-		if ( '' === $ip || $this->is_whitelisted( $ip ) ) {
+			return $user;
+		} catch ( \Throwable $e ) {
+			// Never let lockout break authentication (fail-open on error).
+			Guard::report( 'lockout.check_lock', $e );
 			return $user;
 		}
-
-		$until = (int) get_transient( $this->lock_key( $ip ) );
-		if ( $until > time() ) {
-			$seconds = $until - time();
-			return new \WP_Error(
-				'pressguard_locked_out',
-				sprintf(
-					/* translators: %d: seconds remaining */
-					__( 'Too many failed attempts. Try again in %d seconds.', 'pressguard' ),
-					$seconds
-				)
-			);
-		}
-
-		return $user;
 	}
 
 	/**
@@ -108,79 +115,83 @@ final class Lockout {
 	 * @param string $username Attempted username.
 	 */
 	public function record_failure( $username ) {
-		$ip = $this->ip->client_ip();
-		if ( '' === $ip || $this->is_whitelisted( $ip ) ) {
-			return;
-		}
-
-		// If the IP is already locked, this failure is an attempt made *during*
-		// the lock (WordPress fires wp_login_failed for our lockout WP_Error
-		// too). Log it but don't re-increment, or the counter inflates forever.
-		$until = (int) get_transient( $this->lock_key( $ip ) );
-		if ( $until > time() ) {
-			$this->plugin->logger()->log(
-				'login',
-				'blocked_attempt',
-				array(
-					'severity' => Logger::SEVERITY_NOTICE,
-					'ip'       => $ip,
-					'context'  => array( 'username' => (string) $username ),
-				)
-			);
-			return;
-		}
-
-		$config     = $this->plugin->config();
-		$max        = max( 1, (int) $config->get( 'login.lockout.max_attempts', 5 ) );
-		$window     = max( 60, (int) $config->get( 'login.lockout.window', 900 ) );
-		$base_delay = max( 60, (int) $config->get( 'login.lockout.base_delay', 300 ) );
-
-		// Per-account counting (independent of IP).
-		if ( '' !== $username && (bool) $config->get( 'login.lockout.per_account', true ) ) {
-			$akey   = $this->account_count_key( $username );
-			$acount = (int) get_transient( $akey ) + 1;
-			set_transient( $akey, $acount, $window );
-			$amax = max( 1, (int) $config->get( 'login.lockout.account_max', 10 ) );
-			if ( $acount >= $amax ) {
-				$aover = intdiv( $acount, $amax ) - 1;
-				$adur  = min( DAY_IN_SECONDS, $base_delay * ( 2 ** max( 0, $aover ) ) );
-				set_transient( $this->account_key( $username ), time() + $adur, $adur );
+		try {
+			$ip = $this->ip->client_ip();
+			if ( '' === $ip || $this->is_whitelisted( $ip ) ) {
+				return;
 			}
-		}
 
-		$count_key = $this->count_key( $ip );
-		$count     = (int) get_transient( $count_key ) + 1;
-		set_transient( $count_key, $count, $window );
+			// If the IP is already locked, this failure is an attempt made *during*
+			// the lock (WordPress fires wp_login_failed for our lockout WP_Error
+			// too). Log it but don't re-increment, or the counter inflates forever.
+			$until = (int) get_transient( $this->lock_key( $ip ) );
+			if ( $until > time() ) {
+				$this->plugin->logger()->log(
+					'login',
+					'blocked_attempt',
+					array(
+						'severity' => Logger::SEVERITY_NOTICE,
+						'ip'       => $ip,
+						'context'  => array( 'username' => (string) $username ),
+					)
+				);
+				return;
+			}
 
-		if ( $count >= $max ) {
-			// Exponential backoff: base * 2^(extra lockouts), capped at 24h.
-			$over     = intdiv( $count, $max ) - 1;
-			$duration = min( DAY_IN_SECONDS, $base_delay * ( 2 ** max( 0, $over ) ) );
-			set_transient( $this->lock_key( $ip ), time() + $duration, $duration );
+			$config     = $this->plugin->config();
+			$max        = max( 1, (int) $config->get( 'login.lockout.max_attempts', 5 ) );
+			$window     = max( 60, (int) $config->get( 'login.lockout.window', 900 ) );
+			$base_delay = max( 60, (int) $config->get( 'login.lockout.base_delay', 300 ) );
 
-			$this->plugin->logger()->log(
-				'login',
-				'lockout',
-				array(
-					'severity' => Logger::SEVERITY_WARNING,
-					'ip'       => $ip,
-					'message'  => sprintf( 'IP locked for %ds after %d failures.', $duration, $count ),
-					'context'  => array(
-						'username' => (string) $username,
-						'count'    => $count,
-					),
-				)
-			);
-		} else {
-			$this->plugin->logger()->log(
-				'login',
-				'login_failed',
-				array(
-					'severity' => Logger::SEVERITY_NOTICE,
-					'ip'       => $ip,
-					'context'  => array( 'username' => (string) $username ),
-				)
-			);
+			// Per-account counting (independent of IP).
+			if ( '' !== $username && (bool) $config->get( 'login.lockout.per_account', true ) ) {
+				$akey   = $this->account_count_key( $username );
+				$acount = (int) get_transient( $akey ) + 1;
+				set_transient( $akey, $acount, $window );
+				$amax = max( 1, (int) $config->get( 'login.lockout.account_max', 10 ) );
+				if ( $acount >= $amax ) {
+					$aover = intdiv( $acount, $amax ) - 1;
+					$adur  = min( DAY_IN_SECONDS, $base_delay * ( 2 ** max( 0, $aover ) ) );
+					set_transient( $this->account_key( $username ), time() + $adur, $adur );
+				}
+			}
+
+			$count_key = $this->count_key( $ip );
+			$count     = (int) get_transient( $count_key ) + 1;
+			set_transient( $count_key, $count, $window );
+
+			if ( $count >= $max ) {
+				// Exponential backoff: base * 2^(extra lockouts), capped at 24h.
+				$over     = intdiv( $count, $max ) - 1;
+				$duration = min( DAY_IN_SECONDS, $base_delay * ( 2 ** max( 0, $over ) ) );
+				set_transient( $this->lock_key( $ip ), time() + $duration, $duration );
+
+				$this->plugin->logger()->log(
+					'login',
+					'lockout',
+					array(
+						'severity' => Logger::SEVERITY_WARNING,
+						'ip'       => $ip,
+						'message'  => sprintf( 'IP locked for %ds after %d failures.', $duration, $count ),
+						'context'  => array(
+							'username' => (string) $username,
+							'count'    => $count,
+						),
+					)
+				);
+			} else {
+				$this->plugin->logger()->log(
+					'login',
+					'login_failed',
+					array(
+						'severity' => Logger::SEVERITY_NOTICE,
+						'ip'       => $ip,
+						'context'  => array( 'username' => (string) $username ),
+					)
+				);
+			}
+		} catch ( \Throwable $e ) {
+			Guard::report( 'lockout.record_failure', $e );
 		}
 	}
 

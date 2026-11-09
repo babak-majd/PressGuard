@@ -26,3 +26,4 @@ AGENTS.md
 # Project docs / dev-only (not shipped)
 ARCHITECTURE.md
 languages/_gen.php
+.phpunit.result.cache

@@ -65,3 +65,16 @@
 .rtl .pressguard-card--warn {
 	border-right-color: #dba617;
 }
+
+/* Inline help icon (hover/focus shows the native tooltip). */
+.pressguard-help {
+	color: #787c82;
+	cursor: help;
+	font-size: 17px;
+	vertical-align: middle;
+	margin-inline-start: 4px;
+}
+.pressguard-help:hover,
+.pressguard-help:focus {
+	color: #2271b1;
+}

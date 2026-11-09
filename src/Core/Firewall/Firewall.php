@@ -11,6 +11,7 @@ use PressGuard\Core\Anomaly\Anomaly;
 use PressGuard\Core\Anomaly\RiskEngine;
 use PressGuard\Module;
 use PressGuard\Plugin;
+use PressGuard\Support\Guard;
 use PressGuard\Support\Ip;
 use PressGuard\Support\Logger;
 
@@ -96,7 +97,12 @@ final class Firewall implements Module {
 			( new UnderAttack( $this->plugin ) )->register();
 		}
 
-		$this->inspect();
+		try {
+			$this->inspect();
+		} catch ( \Throwable $e ) {
+			// The firewall must never crash a request (fail-open on error).
+			Guard::report( 'firewall.inspect', $e );
+		}
 	}
 
 	/**
@@ -271,7 +277,25 @@ final class Firewall implements Module {
 		// trip XSS/SQLi rules. Login state isn't loaded this early, so we use a
 		// cheap logged-in-cookie-on-admin-path heuristic (matches the prepend).
 		if ( ! empty( $_POST ) && ! $this->is_trusted_admin_context() ) {
-			$values['body'] = Normalizer::flatten( wp_unslash( $_POST ) );
+			// Never scan credential/secret fields: a password or key is not an
+			// executed value, so matching attack patterns in it is useless and
+			// would wrongly block legitimate logins (a password may contain any
+			// characters). Strip them before rule matching.
+			$body = wp_unslash( $_POST );
+			if ( is_array( $body ) ) {
+				$secret_fields = array( 'pwd', 'pass', 'pass1', 'pass2', 'password', 'user_pass', 'pwd1', 'pwd2', 'pressguard_2fa', 'pressguard_2fa_confirm' );
+				/**
+				 * Filter the request fields the firewall must not inspect
+				 * (passwords, API keys, tokens). Integrations add their own.
+				 *
+				 * @param string[] $secret_fields Field names to skip.
+				 */
+				$secret_fields = (array) apply_filters( 'pressguard_firewall_secret_fields', $secret_fields );
+				foreach ( $secret_fields as $field ) {
+					unset( $body[ $field ] );
+				}
+			}
+			$values['body'] = Normalizer::flatten( $body );
 		}
 		if ( ! empty( $_COOKIE ) ) {
 			$values['cookie'] = Normalizer::flatten( wp_unslash( $_COOKIE ) );

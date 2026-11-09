@@ -243,10 +243,12 @@ final class Admin implements Module {
 	public function footer_text( $text ) {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		if ( $screen && false !== strpos( (string) $screen->id, self::MENU_SLUG ) ) {
+			// Single line, PressPilot-style: name + version · coffee.
 			return sprintf(
-				/* translators: %s: coffee link */
-				esc_html__( 'Thanks for using PressGuard. %s', 'pressguard' ),
-				'<a href="' . esc_url( self::COFFEE_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Buy me a coffee', 'pressguard' ) . ' &#9749;</a>'
+				'<span style="opacity:.85;">PressGuard <code style="background:transparent;">v%1$s</code> &middot; %2$s &middot; %3$s</span>',
+				esc_html( PRESSGUARD_VERSION ),
+				'<a href="' . esc_url( self::COFFEE_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Buy me a coffee', 'pressguard' ) . ' &#9749;</a>',
+				'<a href="https://github.com/babak-majd/PressGuard" target="_blank" rel="noopener noreferrer">GitHub</a>'
 			);
 		}
 

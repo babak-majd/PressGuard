@@ -9,6 +9,7 @@ namespace PressGuard\Core\Login;
 
 use PressGuard\Plugin;
 use PressGuard\Support\Crypto;
+use PressGuard\Support\Guard;
 use PressGuard\Support\Logger;
 
 defined( 'ABSPATH' ) || exit;
@@ -160,38 +161,44 @@ final class TwoFactor {
 		if ( ! $user instanceof \WP_User ) {
 			return $user;
 		}
-		if ( ! self::is_enabled_for( $user->ID ) ) {
-			return $user;
-		}
+		try {
+			if ( ! self::is_enabled_for( $user->ID ) ) {
+				return $user;
+			}
 
-		// phpcs:disable WordPress.Security.NonceVerification.Missing -- this is the login POST itself.
-		$code = isset( $_POST[ self::FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::FIELD ] ) ) : '';
-		// phpcs:enable
+			// phpcs:disable WordPress.Security.NonceVerification.Missing -- this is the login POST itself.
+			$code = isset( $_POST[ self::FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::FIELD ] ) ) : '';
+			// phpcs:enable
 
-		if ( '' === $code ) {
-			return new \WP_Error(
-				'pressguard_2fa_required',
-				__( '<strong>Two-factor code required.</strong> Enter the code from your authenticator app.', 'pressguard' )
+			if ( '' === $code ) {
+				return new \WP_Error(
+					'pressguard_2fa_required',
+					__( '<strong>Two-factor code required.</strong> Enter the code from your authenticator app.', 'pressguard' )
+				);
+			}
+
+			if ( $this->validate_code( $user->ID, $code ) ) {
+				return $user;
+			}
+
+			$this->plugin->logger()->log(
+				'login',
+				'2fa_failed',
+				array(
+					'severity' => Logger::SEVERITY_WARNING,
+					'user_id'  => $user->ID,
+				)
 			);
-		}
 
-		if ( $this->validate_code( $user->ID, $code ) ) {
+			return new \WP_Error(
+				'pressguard_2fa_invalid',
+				__( '<strong>Invalid two-factor code.</strong> Please try again.', 'pressguard' )
+			);
+		} catch ( \Throwable $e ) {
+			// Never lock a user out of login because of a 2FA error.
+			Guard::report( 'twofactor.enforce', $e );
 			return $user;
 		}
-
-		$this->plugin->logger()->log(
-			'login',
-			'2fa_failed',
-			array(
-				'severity' => Logger::SEVERITY_WARNING,
-				'user_id'  => $user->ID,
-			)
-		);
-
-		return new \WP_Error(
-			'pressguard_2fa_invalid',
-			__( '<strong>Invalid two-factor code.</strong> Please try again.', 'pressguard' )
-		);
 	}
 
 	/**
@@ -255,7 +262,13 @@ final class TwoFactor {
 	 */
 	public function render_login_field() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- this is the login form itself.
-		$login = isset( $_POST['log'] ) ? sanitize_user( wp_unslash( $_POST['log'] ) ) : '';
+		$raw = isset( $_POST['log'] ) ? wp_unslash( $_POST['log'] ) : '';
+		// A crafted login POST can send log[] as an array; coerce to string so
+		// sanitize_user() never receives an array (which would be fatal).
+		if ( is_array( $raw ) ) {
+			$raw = reset( $raw );
+		}
+		$login = sanitize_user( (string) $raw );
 		if ( '' === $login ) {
 			return;
 		}

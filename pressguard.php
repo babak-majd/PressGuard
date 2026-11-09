@@ -3,7 +3,7 @@
  * Plugin Name:       PressGuard
  * Plugin URI:        https://github.com/babak-majd/PressGuard
  * Description:       Complete, free WordPress security — firewall, login protection, hardening, malware & security scanning, roles & activity, SSL and more. Nothing less than the big paid plugins, fully free.
- * Version:           0.1.2
+ * Version:           1.0.0
  * Requires at least: 5.6
  * Requires PHP:      7.4
  * Author:            Babak Majd
@@ -23,7 +23,7 @@ if ( defined( 'PRESSGUARD_VERSION' ) ) {
 	return;
 }
 
-define( 'PRESSGUARD_VERSION', '0.1.2' );
+define( 'PRESSGUARD_VERSION', '1.0.0' );
 define( 'PRESSGUARD_FILE', __FILE__ );
 define( 'PRESSGUARD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRESSGUARD_URL', plugin_dir_url( __FILE__ ) );
@@ -77,6 +77,34 @@ if ( ! pressguard_requirements_met() ) {
 	add_action( 'admin_notices', 'pressguard_requirements_notice' );
 	return;
 }
+
+// Capture any fatal error originating in PressGuard so it can be surfaced
+// instead of failing silently behind a 500/502. Stored in an option we can read.
+register_shutdown_function(
+	static function () {
+		$e = error_get_last();
+		if ( ! $e || ! in_array( $e['type'], array( E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_RECOVERABLE_ERROR ), true ) ) {
+			return;
+		}
+		if ( false === strpos( (string) $e['file'], 'pressguard' ) && false === strpos( (string) $e['message'], 'PressGuard' ) ) {
+			return;
+		}
+		if ( function_exists( 'update_option' ) ) {
+			update_option(
+				'pressguard_last_fatal',
+				array(
+					'message' => $e['message'],
+					'file'    => $e['file'],
+					'line'    => $e['line'],
+					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+					'uri'     => isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '',
+					'time'    => time(),
+				),
+				false
+			);
+		}
+	}
+);
 
 // Activation / deactivation hooks are registered against the main file.
 register_activation_hook( __FILE__, array( \PressGuard\Support\Installer::class, 'activate' ) );

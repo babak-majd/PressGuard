@@ -174,6 +174,7 @@ final class Settings {
 						'type'    => 'csv',
 						'label'   => __( 'Country codes (e.g. RU, CN, KP)', 'pressguard' ),
 						'default' => array(),
+						'help'    => __( 'Comma-separated ISO 3166-1 alpha-2 codes. Examples: US United States, GB United Kingdom, DE Germany, FR France, IT Italy, ES Spain, RU Russia, CN China, IN India, IR Iran, TR Turkey, BR Brazil, CA Canada, AU Australia, JP Japan, KR South Korea, KP North Korea, SA Saudi Arabia, AE UAE, NL Netherlands, SE Sweden, PL Poland, UA Ukraine, VN Vietnam, ID Indonesia, PK Pakistan, NG Nigeria, EG Egypt, ZA South Africa, MX Mexico.', 'pressguard' ),
 					),
 					array(
 						'key'     => 'geo.http_lookup',
@@ -425,7 +426,14 @@ final class Settings {
 				<table class="form-table" role="presentation">
 					<?php foreach ( $schema[ $active ]['fields'] as $field ) : ?>
 						<tr>
-							<th scope="row"><?php echo esc_html( $field['label'] ); ?></th>
+							<th scope="row">
+								<?php echo esc_html( $field['label'] ); ?>
+								<?php if ( ! empty( $field['help'] ) ) : ?>
+									<span class="pressguard-help dashicons dashicons-editor-help" tabindex="0"
+										title="<?php echo esc_attr( $field['help'] ); ?>"
+										aria-label="<?php echo esc_attr( $field['help'] ); ?>"></span>
+								<?php endif; ?>
+							</th>
 							<td><?php $this->render_field( $field, $config->get( $field['key'], $field['default'] ) ); ?></td>
 						</tr>
 					<?php endforeach; ?>
